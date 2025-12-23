@@ -1,5 +1,6 @@
-import 'package:chatbypics/screens/AuthPage.dart';
-import 'package:chatbypics/screens/HomePage.dart';
+import 'package:chatbypics/screens/authPage.dart';
+import 'package:chatbypics/screens/homePage.dart';
+import 'package:chatbypics/screens/verifyEmailPage.dart';
 import 'package:chatbypics/services/auth.dart';
 import 'package:flutter/material.dart';
 
@@ -29,8 +30,9 @@ class MyApp extends StatelessWidget {
         stream: Auth().authStateChanges, 
         builder: (context, snapshot){
           if(snapshot.hasData){
-            return Homepage();
+            return VerifyEmailPage();
           }else{
+            //se l'utente non è loggato
             return AuthPage();
           }
         }),
