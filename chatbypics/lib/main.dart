@@ -1,5 +1,4 @@
 import 'package:chatbypics/screens/authPage.dart';
-import 'package:chatbypics/screens/homePage.dart';
 import 'package:chatbypics/screens/verifyEmailPage.dart';
 import 'package:chatbypics/services/auth.dart';
 import 'package:flutter/material.dart';
