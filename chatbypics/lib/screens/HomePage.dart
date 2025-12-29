@@ -3,6 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:chatbypics/screens/chatListPage.dart';
 import 'package:chatbypics/screens/settingPage.dart';
 
+/*
+Classe che gestisce la barra per navigare tra le varie pagine all'interno
+dell'applicazione
+*/ 
 class Homepage extends StatefulWidget{
   const Homepage({super.key});
 

@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+/*
+Classe che gestisce la pagina che contiene tutte le chat
+*/
 class ChatListPage extends StatelessWidget {
   const ChatListPage({super.key});
 
@@ -9,7 +12,7 @@ class ChatListPage extends StatelessWidget {
       appBar: AppBar(
         title: const Text("ChatByPics"),
         actions: [
-          IconButton(icon: const Icon(Icons.camera_alt_outlined), onPressed: () {}),
+          //IconButton(icon: const Icon(Icons.camera_alt_outlined), onPressed: () {}),
           IconButton(icon: const Icon(Icons.search), onPressed: () {}),
           IconButton(icon: const Icon(Icons.more_vert), onPressed: () {}),
         ],
