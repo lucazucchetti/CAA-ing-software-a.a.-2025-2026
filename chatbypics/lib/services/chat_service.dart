@@ -5,14 +5,13 @@ class ChatService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  // --- 1. INVIARE UN PITTOGRAMMA ---
-  Future<void> sendPictogram({
+  // --- 1. NUOVO METODO PER INVIARE PIÙ PITTOGRAMMI ---
+  Future<void> sendPictogramMessage({
     required String chatID,
     required String senderID,
-    required String imageUrl,
-    required String description,
+    required List<Map<String, String>> pictograms,
   }) async {
-    
+
     // A. Aggiungi il messaggio alla collezione 'messages'
     await _firestore
         .collection('chats')
@@ -20,19 +19,21 @@ class ChatService {
         .collection('messages')
         .add({
       'senderId': senderID,
-      'imageUrl': imageUrl,
-      'description': description, // Es: "Ciao", "Mangiare"
-      'timestamp': FieldValue.serverTimestamp(), // L'ora del server
-      'type': 'pittogramma',
+      'pictograms': pictograms,
+      'timestamp': FieldValue.serverTimestamp(),
+      'type': 'pittogramma_multiplo',
     });
 
-    // B. Aggiorna la chat principale (per farla salire in cima alla lista)
+    // B. Aggiorna l'anteprima nella home (unisce i testi: es. "Ciao, Mangiare")
+    String previewText = pictograms.map((p) => p['description']).join(", ");
+
+    // C. Aggiorna la chat principale (per farla salire in cima alla lista)
     // Questo serve per mostrare l'ultimo messaggio nella Home Page
     await _firestore.collection('chats').doc(chatID).update({
       'lastMessageTime': FieldValue.serverTimestamp(),
       'lastMessageData': {
-        'description': description, // Testo anteprima
-        'imageUrl': imageUrl,       // Icona anteprima (opzionale)
+        'description': previewText,
+        'imageUrl': pictograms.isNotEmpty ? pictograms.first['imageUrl'] : '',
       }
     });
   }
@@ -44,7 +45,7 @@ class ChatService {
 
     // Genera ID univoco ordinato alfabeticamente (es. A_B è uguale a B_A)
     List<String> ids = [currentUser.uid, friendUid];
-    ids.sort(); 
+    ids.sort();
     String chatDocId = ids.join("_");
 
     DocumentSnapshot chatDoc = await _firestore.collection('chats').doc(chatDocId).get();
@@ -60,7 +61,7 @@ class ChatService {
 
       await _firestore.collection('chats').doc(chatDocId).set({
         'participants': [currentUser.uid, friendUid],
-        'visibleTo': allowedUsers, 
+        'visibleTo': allowedUsers,
         'lastMessageTime': FieldValue.serverTimestamp(),
         'lastMessageData': {
           'description': 'Nuova chat',
