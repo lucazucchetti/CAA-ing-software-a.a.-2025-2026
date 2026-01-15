@@ -12,122 +12,166 @@ class SettingPage extends StatefulWidget {
 }
 
 class _SettingPageState extends State<SettingPage> {
-  // Variabile per memorizzare se l'utente è un Tutor
-  bool isTutor = false;
-  bool isLoading = true; // Per mostrare un caricamento mentre controlliamo il ruolo
 
-  @override
-  void initState() {
-    super.initState();
-    _checkUserRole();
-  }
+  bool _isDarkMode = false;
+  bool _showLabels = true;
+  bool _autoReadMessages = true;
+  double _gridSize = 3.0; // Valore indicativo per lo slider
 
-  // Funzione che scarica il ruolo da Firestore
-  Future<void> _checkUserRole() async {
-    User? user = FirebaseAuth.instance.currentUser;
-    
-    if (user != null) {
-      try {
-        DocumentSnapshot doc = await FirebaseFirestore.instance
-            .collection('users')
-            .doc(user.uid)
-            .get();
-
-        if (doc.exists) {
-          // Controlliamo il campo 'ruolo' che abbiamo salvato durante la registrazione
-          // Assicurati che su Firestore il campo si chiami esattamente 'ruolo'
-          String role = doc.get('ruolo') ?? ''; 
-          
-          if (mounted) {
-            setState(() {
-              isTutor = (role == 'Tutor');
-              isLoading = false;
-            });
-          }
-        }
-      } catch (e) {
-        print("Errore nel recupero del ruolo: $e");
-        setState(() => isLoading = false);
-      }
-    }
-  }
+  final User? user = Auth().currentUser; // Recupero utente corrente
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Impostazioni"),
+        backgroundColor: Colors.deepPurple.shade50,
       ),
-      body: isLoading 
-          ? const Center(child: CircularProgressIndicator()) // Mostra rotella se sta caricando
-          : Column(
-              children: [
-                // 1. SEZIONE IMPOSTAZIONI GENERALI
-                ListTile(
-                  leading: const Icon(Icons.settings, color: Colors.deepPurple),
-                  title: const Text("Impostazioni Applicazione"),
-                  subtitle: const Text("Lingua, notifiche, aspetto"),
-                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                  onTap: () {
-                    // Qui navigherai alla pagina di dettaglio impostazioni
-                    // Navigator.push(...);
-                  },
-                ),
-                
-                const Divider(), // Linea divisoria
-
-                // 2. SEZIONE REGISTRA CCN (Visibile SOLO se isTutor è true)
-                if (isTutor) 
-                  ListTile(
-                    leading: const Icon(Icons.supervised_user_circle, color: Colors.blue),
-                    title: const Text("Gestione CCN"), // Puoi rinominarlo così
-                    subtitle: const Text("Aggiungi o modifica i tuoi utenti assistiti"),
-                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const CCNManagePage()
-                        ),
-      );
-    },
-  ),
-
-                if (isTutor) const Divider(),
-
-                // SPAZIO VUOTO per spingere il logout in basso
-                const Spacer(),
-
-                // 3. BOTTONE LOGOUT
-                Padding(
-                  padding: const EdgeInsets.all(20.0),
-                  child: SizedBox(
-                    width: double.infinity, // Occupa tutta la larghezza
-                    height: 50,
-                    child: ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red.shade100, // Sfondo rosso chiaro
-                        foregroundColor: Colors.red, // Testo/Icona rossa
-                        elevation: 0,
-                      ),
-                      icon: const Icon(Icons.logout),
-                      label: const Text("Esci dall'account", style: TextStyle(fontWeight: FontWeight.bold)),
-                      onPressed: () async {
-                        // Esegue il logout
-                        await Auth().signOut();
-                        // Chiude la pagina delle impostazioni (torna indietro)
-                        // Poiché Auth cambia lo stato, main.dart reindirizzerà automaticamente al Login
-                        if (mounted){
-                          Navigator.of(context).popUntil((route) => route.isFirst);
-                        } 
-                      },
-                    ),
-                  ),
-                ),
-                
-                const SizedBox(height: 20), // Un po' di margine dal fondo
-              ],
+      body: ListView(
+        children: [
+          //  SEZIONE PROFILO
+          _buildSectionHeader("Profilo"),
+          ListTile(
+            leading: CircleAvatar(
+              backgroundColor: Colors.deepPurple,
+              child: Text(user?.email?.substring(0, 1).toUpperCase() ?? "U", style: const TextStyle(color: Colors.white)),
             ),
+            title: Text(user?.email ?? "Utente"),
+            subtitle: const Text("Tocca per modificare il profilo"),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+            onTap: () {
+              // TODO: Naviga a pagina modifica profilo
+            },
+          ),
+
+          const Divider(),
+
+          //  SEZIONE ACCESSIBILITÀ CAA
+          _buildSectionHeader("Accessibilità CAA"),
+
+          // Switch Etichette
+          SwitchListTile(
+            title: const Text("Mostra testo sotto i simboli"),
+            subtitle: const Text("Aiuta l'associazione immagine-parola"),
+            value: _showLabels,
+            activeThumbColor: Colors.deepPurple,
+            onChanged: (bool value) {
+              setState(() => _showLabels = value);
+              // TODO: Salva preferenza
+            },
+          ),
+
+          // Slider Grandezza Griglia
+          ListTile(
+            title: const Text("Grandezza Griglia Simboli"),
+            subtitle: Text("Dimensione attuale: ${_gridSize.toInt()}"),
+          ),
+          Slider(
+            value: _gridSize,
+            min: 1,
+            max: 5,
+            divisions: 4,
+            label: _gridSize.toInt().toString(),
+            activeColor: Colors.deepPurple,
+            onChanged: (double value) {
+              setState(() => _gridSize = value);
+              // TODO: Salva preferenza e aggiorna GridView nella chat
+            },
+          ),
+
+          const Divider(),
+
+          // SEZIONE VOCALE
+          _buildSectionHeader("Sintesi Vocale"),
+          SwitchListTile(
+            title: const Text("Lettura Automatica"),
+            subtitle: const Text("Leggi i messaggi appena arrivano"),
+            value: _autoReadMessages,
+            activeThumbColor: Colors.deepPurple,
+            onChanged: (bool value) {
+              setState(() => _autoReadMessages = value);
+            },
+          ),
+          ListTile(
+            title: const Text("Velocità Voce"),
+            trailing: DropdownButton<String>(
+              value: "Normale",
+              items: <String>['Lenta', 'Normale', 'Veloce'].map((String value) {
+                return DropdownMenuItem<String>(
+                  value: value,
+                  child: Text(value),
+                );
+              }).toList(),
+              onChanged: (_) {
+                // TODO: Implementa logica TTS
+              },
+            ),
+          ),
+
+          const Divider(),
+
+          // SEZIONE SISTEMA
+          _buildSectionHeader("App & Sistema"),
+          SwitchListTile(
+            secondary: const Icon(Icons.dark_mode),
+            title: const Text("Modalità Scura"),
+            value: _isDarkMode,
+            onChanged: (bool value) {
+              setState(() => _isDarkMode = value);
+              // TODO: Implementa cambio tema globale
+            },
+          ),
+
+          ListTile(
+            leading: const Icon(Icons.download_for_offline),
+            title: const Text("Gestione Offline"),
+            subtitle: const Text("Scarica simboli per uso senza rete"),
+            onTap: () {
+              // TODO: Logica download massivo
+            },
+          ),
+
+          const Divider(),
+
+          //  TASTO LOGOUT
+          Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red.shade100,
+                foregroundColor: Colors.red,
+                elevation: 0,
+              ),
+              icon: const Icon(Icons.logout),
+              label: const Text("Disconnetti"),
+              onPressed: () async {
+                await Auth().signOut();
+                // AuthPage gestirà il cambio di stato grazie allo StreamBuilder nel main
+              },
+            ),
+          ),
+
+          const Center(
+            child: Text("Versione 1.0.0", style: TextStyle(color: Colors.grey, fontSize: 12)),
+          ),
+          const SizedBox(height: 20),
+        ],
+      ),
+    );
+  }
+
+  // Widget helper per i titoli delle sezioni
+  Widget _buildSectionHeader(String title) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+      child: Text(
+        title.toUpperCase(),
+        style: TextStyle(
+          color: Colors.deepPurple.shade700,
+          fontWeight: FontWeight.bold,
+          fontSize: 13,
+        ),
+      ),
     );
   }
 }

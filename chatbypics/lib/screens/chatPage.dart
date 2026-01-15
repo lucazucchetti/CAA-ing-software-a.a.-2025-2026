@@ -22,6 +22,9 @@ class _ChatPageState extends State<ChatPage> {
   bool _isPickerVisible = false; // Controlla se la griglia è aperta
   final List<Map<String, String>> _composingMessage = [];
   // Esempi di pittogrammi (in futuro arriveranno dal DB)
+
+  @override
+
   final List<Map<String, String>> _samplePictograms = [
     {'url': 'https://cdn-icons-png.flaticon.com/512/1902/1902201.png', 'desc': 'Ciao'},
     {'url': 'https://cdn-icons-png.flaticon.com/512/3076/3076113.png', 'desc': 'Mangiare'},
