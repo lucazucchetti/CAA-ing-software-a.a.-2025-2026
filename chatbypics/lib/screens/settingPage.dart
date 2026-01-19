@@ -3,6 +3,7 @@ import 'package:chatbypics/services/auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:chatbypics/services/preferences_service.dart';
 
 class SettingPage extends StatefulWidget {
   const SettingPage({super.key});
@@ -12,13 +13,58 @@ class SettingPage extends StatefulWidget {
 }
 
 class _SettingPageState extends State<SettingPage> {
+  final PreferencesService _prefService = PreferencesService();
+  final User? user = Auth().currentUser;
 
   bool _isDarkMode = false;
   bool _showLabels = true;
   bool _autoReadMessages = true;
   double _gridSize = 3.0; // Valore indicativo per lo slider
 
-  final User? user = Auth().currentUser; // Recupero utente corrente
+
+
+  @override
+  void initState() {
+    super.initState();
+    _initPreferences(); // Carica le impostazioni all'avvio
+  }
+  // Carica i dati usando il service
+  void _initPreferences() async {
+    if (user == null) return;
+    var prefs = await _prefService.getUserPreferences(user!.uid);
+
+    // Aggiorna la UI solo se la pagina è ancora caricata
+    if (mounted) {
+      setState(() {
+        if (prefs.containsKey(PreferencesService.keyDarkMode)) {
+          _isDarkMode = prefs[PreferencesService.keyDarkMode];
+        }
+        if (prefs.containsKey(PreferencesService.keyShowLabels)) {
+          _showLabels = prefs[PreferencesService.keyShowLabels];
+        }
+        if (prefs.containsKey(PreferencesService.keyAutoRead)) {
+          _autoReadMessages = prefs[PreferencesService.keyAutoRead];
+        }
+        if (prefs.containsKey(PreferencesService.keyGridSize)) {
+          _gridSize = (prefs[PreferencesService.keyGridSize] as num).toDouble();
+        }
+      });
+    }
+  }
+  // Funzione helper per aggiornare UI e Database insieme
+  void _updateVal(String key, dynamic value) {
+    // Aggiorna UI locale
+    setState(() {
+      if (key == PreferencesService.keyShowLabels) _showLabels = value;
+      if (key == PreferencesService.keyGridSize) _gridSize = value;
+      if (key == PreferencesService.keyAutoRead) _autoReadMessages = value;
+      if (key == PreferencesService.keyDarkMode) _isDarkMode = value;
+    });
+    // Salva su DB tramite Service
+    if (user != null) {
+      _prefService.updatePreference(user!.uid, key, value);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -55,10 +101,7 @@ class _SettingPageState extends State<SettingPage> {
             subtitle: const Text("Aiuta l'associazione immagine-parola"),
             value: _showLabels,
             activeThumbColor: Colors.deepPurple,
-            onChanged: (bool value) {
-              setState(() => _showLabels = value);
-              // TODO: Salva preferenza
-            },
+              onChanged: (val) => _updateVal(PreferencesService.keyShowLabels, val),
           ),
 
           // Slider Grandezza Griglia
@@ -73,10 +116,7 @@ class _SettingPageState extends State<SettingPage> {
             divisions: 4,
             label: _gridSize.toInt().toString(),
             activeColor: Colors.deepPurple,
-            onChanged: (double value) {
-              setState(() => _gridSize = value);
-              // TODO: Salva preferenza e aggiorna GridView nella chat
-            },
+            onChanged: (val) => _updateVal(PreferencesService.keyGridSize, val),
           ),
 
           const Divider(),
@@ -88,10 +128,9 @@ class _SettingPageState extends State<SettingPage> {
             subtitle: const Text("Leggi i messaggi appena arrivano"),
             value: _autoReadMessages,
             activeThumbColor: Colors.deepPurple,
-            onChanged: (bool value) {
-              setState(() => _autoReadMessages = value);
-            },
+            onChanged: (val) => _updateVal(PreferencesService.keyAutoRead, val),
           ),
+
           ListTile(
             title: const Text("Velocità Voce"),
             trailing: DropdownButton<String>(
@@ -116,19 +155,7 @@ class _SettingPageState extends State<SettingPage> {
             secondary: const Icon(Icons.dark_mode),
             title: const Text("Modalità Scura"),
             value: _isDarkMode,
-            onChanged: (bool value) {
-              setState(() => _isDarkMode = value);
-              // TODO: Implementa cambio tema globale
-            },
-          ),
-
-          ListTile(
-            leading: const Icon(Icons.download_for_offline),
-            title: const Text("Gestione Offline"),
-            subtitle: const Text("Scarica simboli per uso senza rete"),
-            onTap: () {
-              // TODO: Logica download massivo
-            },
+            onChanged: (val) => _updateVal(PreferencesService.keyDarkMode, val),
           ),
 
           const Divider(),
@@ -150,11 +177,6 @@ class _SettingPageState extends State<SettingPage> {
               },
             ),
           ),
-
-          const Center(
-            child: Text("Versione 1.0.0", style: TextStyle(color: Colors.grey, fontSize: 12)),
-          ),
-          const SizedBox(height: 20),
         ],
       ),
     );

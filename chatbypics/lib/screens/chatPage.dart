@@ -2,6 +2,7 @@ import 'package:chatbypics/services/chat_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:chatbypics/services/preferences_service.dart';
 
 class ChatPage extends StatefulWidget {
   final String chatID;
@@ -19,10 +20,11 @@ class ChatPage extends StatefulWidget {
 
 class _ChatPageState extends State<ChatPage> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final PreferencesService _prefService = PreferencesService();
   bool _isPickerVisible = false; // Controlla se la griglia è aperta
   final List<Map<String, String>> _composingMessage = [];
-  // Esempi di pittogrammi (in futuro arriveranno dal DB)
-
+  double _gridSize = 3.0;
+  bool _showLabels = true;
   @override
 
   final List<Map<String, String>> _samplePictograms = [
@@ -33,6 +35,31 @@ class _ChatPageState extends State<ChatPage> {
     {'url': 'https://cdn-icons-png.flaticon.com/512/187/187159.png', 'desc': 'Triste'},
     {'url': 'https://cdn-icons-png.flaticon.com/512/833/833472.png', 'desc': 'Bagno'},
   ];
+  @override
+  void initState() {
+    super.initState();
+    _loadPreferences(); // scarica le impostazioni appena entri in chat
+  }
+  Future<void> _loadPreferences() async {
+    final user = _auth.currentUser;
+    if (user != null) {
+      // Usa il service per ottenere la mappa di preferenze
+      var prefs = await _prefService.getUserPreferences(user.uid);
+
+      if (mounted) {
+        setState(() {
+          // Aggiorna le variabili locali se le chiavi esistono
+          if (prefs.containsKey(PreferencesService.keyGridSize)) {
+            _gridSize = (prefs[PreferencesService.keyGridSize] as num).toDouble();
+          }
+          if (prefs.containsKey(PreferencesService.keyShowLabels)) {
+            _showLabels = prefs[PreferencesService.keyShowLabels];
+          }
+        });
+      }
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -44,7 +71,6 @@ class _ChatPageState extends State<ChatPage> {
       ),
       body: Column(
         children: [
-          // 1. LISTA DEI MESSAGGI
           Expanded(
             child: StreamBuilder<QuerySnapshot>(
               stream: FirebaseFirestore.instance
@@ -60,13 +86,13 @@ class _ChatPageState extends State<ChatPage> {
 
                 var messages = snapshot.data!.docs;
 
-                // Se non ci sono messaggi, mostra un avviso amichevole
+                // Se non ci sono messaggi, mostra un avviso
                 if (messages.isEmpty) {
                   return const Center(child: Text("Inizia a comunicare con i pittogrammi!"));
                 }
 
                 return ListView.builder(
-                  reverse: true, // I messaggi partono dal basso
+                  reverse: true,
                   itemCount: messages.length,
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 20),
                   itemBuilder: (context, index) {
@@ -77,20 +103,20 @@ class _ChatPageState extends State<ChatPage> {
             ),
           ),
 
-          // 2. AREA DI COMPOSIZIONE (Anteprima prima dell'invio)
+
           if (_composingMessage.isNotEmpty) _buildComposerPreview(),
 
-          // 3. BARRA DI INPUT
+
           _buildInputArea(),
 
-          // 4. Selettore Pittogrammi Persistente
+
           if (_isPickerVisible) _buildPersistentPicker(),
         ],
       ),
     );
   }
 
-  // --- WIDGET MESSAGGIO (CON GRIGLIA DI PITTOGRAMMI) ---
+  // widget ocn messaggio e pittogrammi
   Widget _buildMessageItem(DocumentSnapshot doc) {
     Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
     bool isMe = data['senderId'] == _auth.currentUser!.uid;
@@ -98,6 +124,8 @@ class _ChatPageState extends State<ChatPage> {
     // Recuperiamo la lista di pittogrammi dal documento
     List<dynamic> pictograms = data['pictograms'] ?? [];
 
+    int itemsPerRow = _gridSize.toInt();
+    if (itemsPerRow < 1) itemsPerRow = 1;
     return Align(
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
@@ -114,11 +142,13 @@ class _ChatPageState extends State<ChatPage> {
           alignment: WrapAlignment.start,
           children: pictograms.map((pic) {
             // Calcolo larghezza per averne max 3 per riga (togliendo i margini)
-            double itemWidth = (MediaQuery.of(context).size.width * 0.7) / 3 - 12;
+            double totalWidth = MediaQuery.of(context).size.width * 0.7;
+            double itemWidth = (totalWidth / itemsPerRow) - 12;
             return Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Image.network(pic['imageUrl'], width: itemWidth, height: itemWidth, fit: BoxFit.contain),
+                if (_showLabels)
                 Text(pic['description'] ?? '', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
               ],
             );
@@ -128,7 +158,7 @@ class _ChatPageState extends State<ChatPage> {
     );
   }
 
-  // --- BARRA INFERIORE DELLA CHAT ---
+  // barra inferiore chat
   Widget _buildInputArea() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
