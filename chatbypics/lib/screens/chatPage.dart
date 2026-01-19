@@ -2,6 +2,7 @@ import 'package:chatbypics/services/chat_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:chatbypics/services/pictogram_service.dart';
 
 class ChatPage extends StatefulWidget {
   final String chatID;
@@ -19,16 +20,29 @@ class ChatPage extends StatefulWidget {
 
 class _ChatPageState extends State<ChatPage> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  bool _isPickerVisible = false; // Controlla se la griglia è aperta
+  bool _isPickerVisible = false; //griglia chiusa di default
   final List<Map<String, String>> _composingMessage = [];
-  // Esempi di pittogrammi (in futuro arriveranno dal DB)
-  final List<Map<String, String>> _samplePictograms = [
-    {'url': 'https://cdn-icons-png.flaticon.com/512/1902/1902201.png', 'desc': 'Ciao'},
-    {'url': 'https://cdn-icons-png.flaticon.com/512/3076/3076113.png', 'desc': 'Mangiare'},
-    {'url': 'https://cdn-icons-png.flaticon.com/512/2444/2444988.png', 'desc': 'Bere'},
-    {'url': 'https://cdn-icons-png.flaticon.com/512/711/711239.png', 'desc': 'Felice'},
-    {'url': 'https://cdn-icons-png.flaticon.com/512/187/187159.png', 'desc': 'Triste'},
-    {'url': 'https://cdn-icons-png.flaticon.com/512/833/833472.png', 'desc': 'Bagno'},
+
+  // STATO PER LA RICERCA / CATEGORIE
+  final TextEditingController _searchController = TextEditingController();
+  List<Map<String, String>> _currentSymbols = []; // I simboli visualizzati al momento
+  bool _isLoading = false;
+  bool _showingCategories = true; // Se true mostra le cartelle, se false i simboli
+  String _currentCategoryName = ""; // Titolo della categoria attuale
+
+  //Lista delle categorie con la relativa immagine di copertina
+  final List<Map<String, String>> _categories = [
+    {'name': 'Persone', 'term': 'persone', 'img': 'https://static.arasaac.org/pictograms/2649/2649_300.png'},
+    {'name': 'Azioni', 'term': 'verbi', 'img': 'https://static.arasaac.org/pictograms/6873/6873_300.png'},
+    {'name': 'Emozioni', 'term': 'emozioni', 'img': 'https://static.arasaac.org/pictograms/8582/8582_300.png'},
+    {'name': 'Alimentazione', 'term': 'alimenti', 'img': 'https://static.arasaac.org/pictograms/2534/2534_300.png'},
+    {'name': 'Luoghi', 'term': 'luoghi', 'img': 'https://static.arasaac.org/pictograms/32598/32598_300.png'},
+    {'name': 'Scuola', 'term': 'scuola', 'img': 'https://static.arasaac.org/pictograms/15515/15515_300.png'},
+    {'name': 'Corpo', 'term': 'corpo umano', 'img': 'https://static.arasaac.org/pictograms/6473/6473_nocolor_500.png'},
+    {'name': 'Vestiti', 'term': 'abbigliamento', 'img': 'https://static.arasaac.org/pictograms/2613/2613_300.png'},
+    {'name': 'Saluti', 'term': 'saluti sociali', 'img': 'https://static.arasaac.org/pictograms/2347/2347_300.png'},
+    {'name': 'Aggettivi', 'term': 'aggettivi', 'img': 'https://static.arasaac.org/pictograms/32584/32584_300.png'},
+    
   ];
 
   @override
@@ -86,6 +100,243 @@ class _ChatPageState extends State<ChatPage> {
       ),
     );
   }
+  // --- LOGICA DI NAVIGAZIONE E RICERCA ---
+
+  // 1. Quando si clicca una categoria
+  void _selectCategory(String name, String term) async {
+    setState(() {
+      _isLoading = true;
+      _showingCategories = false; // Nascondi cartelle, mostra simboli
+      _currentCategoryName = name;
+      _searchController.clear(); // Pulisce la ricerca testuale se c'era
+    });
+
+    // Cerca su ARASAAC usando il termine della categoria
+    try {
+      var results = await PictogramService().searchPictograms(term);
+      setState(() {
+        _currentSymbols = results;
+        _isLoading = false;
+      });
+    } catch (e) {
+      print("Errore: $e");
+      setState(() => _isLoading = false);
+    }
+  }
+
+  // 2. Quando si cerca col testo
+  void _performTextSearch() async {
+    String query = _searchController.text.trim();
+    if (query.isEmpty) return;
+
+    setState(() {
+      _isLoading = true;
+      _showingCategories = false; // Passa alla vista simboli
+      _currentCategoryName = "Ricerca: $query";
+    });
+
+    try {
+      var results = await PictogramService().searchPictograms(query);
+      setState(() {
+        _currentSymbols = results;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  // 3. Tornare alla vista Categorie
+  void _backToCategories() {
+    setState(() {
+      _showingCategories = true;
+      _currentSymbols = [];
+      _searchController.clear();
+      _currentCategoryName = "";
+      // Chiudi la tastiera del telefono
+      FocusScope.of(context).unfocus();
+    });
+  }
+
+  // --- UI DEL SELETTORE ---
+  Widget _buildPersistentPicker() {
+    return Container(
+      height: 350, // Altezza fissa del pannello
+      color: Colors.white,
+      child: Column(
+        children: [
+          // A. BARRA SUPERIORE (Ricerca + Navigazione)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade100,
+              border: Border(bottom: BorderSide(color: Colors.grey.shade300)),
+            ),
+            child: Row(
+              children: [
+                // Tasto Indietro (visibile solo se non siamo nelle categorie)
+                if (!_showingCategories)
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back, color: Colors.deepPurple),
+                    onPressed: _backToCategories,
+                  ),
+                
+                // Barra di ricerca
+                Expanded(
+                  child: TextField(
+                    controller: _searchController,
+                    decoration: InputDecoration(
+                      hintText: "Cerca simbolo...",
+                      isDense: true,
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(20), borderSide: BorderSide.none),
+                      filled: true,
+                      fillColor: Colors.white,
+                      prefixIcon: const Icon(Icons.search, size: 20),
+                    ),
+                    onSubmitted: (_) => _performTextSearch(),
+                  ),
+                ),
+                
+                // Tasto Cerca (se si scrive a mano)
+                IconButton(
+                  icon: const Icon(Icons.search, color: Colors.deepPurple),
+                  onPressed: _performTextSearch,
+                ),
+                
+                // Tasto Chiudi Tutto
+                IconButton(
+                  icon: const Icon(Icons.close, color: Colors.grey),
+                  onPressed: () => setState(() => _isPickerVisible = false),
+                ),
+              ],
+            ),
+          ),
+
+          // B. TITOLO CATEGORIA CORRENTE (Opzionale)
+          if (!_showingCategories && !_isLoading)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 16),
+              color: Colors.deepPurple.shade50,
+              child: Text(
+                _currentCategoryName,
+                style: TextStyle(fontWeight: FontWeight.bold, color: Colors.deepPurple.shade900),
+              ),
+            ),
+
+          // C. CONTENUTO PRINCIPALE (Grid Categorie O Grid Simboli)
+          Expanded(
+            child: _isLoading 
+                ? const Center(child: CircularProgressIndicator())
+                : _showingCategories 
+                    ? _buildCategoriesGrid() // Mostra le cartelle
+                    : _buildSymbolsGrid(),   // Mostra i pittogrammi
+          ),
+        ],
+      ),
+    );
+  }
+
+  // --- VISTA 1: GRIGLIA DELLE CATEGORIE ---
+  Widget _buildCategoriesGrid() {
+    return GridView.builder(
+      padding: const EdgeInsets.all(10),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 3, // 3 colonne per le categorie
+        crossAxisSpacing: 10,
+        mainAxisSpacing: 10,
+        childAspectRatio: 0.9, // Leggermente più alte che larghe
+      ),
+      itemCount: _categories.length,
+      itemBuilder: (context, index) {
+        final cat = _categories[index];
+        return GestureDetector(
+          onTap: () => _selectCategory(cat['name']!, cat['term']!),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              border: Border.all(color: Colors.deepPurple.shade100, width: 2),
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 4)],
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Icona Categoria
+                Image.network(
+                  cat['img']!, 
+                  height: 50,
+                  loadingBuilder: (ctx, child, p) => p == null ? child : const SizedBox(height: 50),
+                  errorBuilder: (ctx, err, st) => const Icon(Icons.folder, size: 50, color: Colors.orange),
+                ),
+                const SizedBox(height: 8),
+                // Nome Categoria
+                Text(
+                  cat['name']!,
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  // --- VISTA 2: GRIGLIA DEI SIMBOLI (RISULTATI) ---
+  Widget _buildSymbolsGrid() {
+    if (_currentSymbols.isEmpty) {
+      return const Center(child: Text("Nessun simbolo trovato."));
+    }
+
+    return GridView.builder(
+      padding: const EdgeInsets.all(10),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 4, // 4 colonne per i simboli (più piccoli)
+        crossAxisSpacing: 10,
+        mainAxisSpacing: 10,
+      ),
+      itemCount: _currentSymbols.length,
+      itemBuilder: (context, index) {
+        final pic = _currentSymbols[index];
+        return GestureDetector(
+          onTap: () {
+            // AGGIUNGE AL MESSAGGIO
+            setState(() {
+              _composingMessage.add({'url': pic['url']!, 'desc': pic['desc']!});
+            });
+            // NON chiudiamo il pannello, così può aggiungerne altri
+          },
+          child: Container(
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey.shade300),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(4.0),
+                    child: Image.network(pic['url']!, fit: BoxFit.contain),
+                  ),
+                ),
+                Text(
+                  pic['desc']!,
+                  style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
 
   // --- WIDGET MESSAGGIO (CON GRIGLIA DI PITTOGRAMMI) ---
   Widget _buildMessageItem(DocumentSnapshot doc) {
@@ -128,27 +379,37 @@ class _ChatPageState extends State<ChatPage> {
   // --- BARRA INFERIORE DELLA CHAT ---
   Widget _buildInputArea() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       color: Colors.white,
       child: SafeArea(
-        child: Row(
-          children: [
-            Expanded(
-              child: ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: _isPickerVisible ? Colors.grey : Colors.deepPurple,
-                  foregroundColor: Colors.white,
-                ),
-                icon: Icon(_isPickerVisible ? Icons.keyboard_arrow_down : Icons.grid_view_rounded),
-                label: Text(_isPickerVisible ? "Nascondi" : "Aggiungi Simboli"),
-                onPressed: () {
-                  setState(() {
-                    _isPickerVisible = !_isPickerVisible;
-                  });
-                },
-              ),
+        top: false,
+        child: SizedBox(
+          width: double.infinity,
+          height: 36,
+          child: ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: _isPickerVisible ? Colors.grey.shade400 : Colors.deepPurple,
+              foregroundColor: Colors.white,
+              elevation: 0,
+              // MODIFICA QUI: Aumentato a 30 per renderlo completamente arrotondato
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+              padding: EdgeInsets.zero,
             ),
-          ],
+            icon: Icon(
+              _isPickerVisible ? Icons.keyboard_arrow_down : Icons.grid_view_rounded,
+              size: 20
+            ),
+            label: Text(
+              _isPickerVisible ? "Nascondi" : "Apri Simboli",
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)
+            ),
+            onPressed: () {
+              setState(() {
+                _isPickerVisible = !_isPickerVisible;
+                if (!_isPickerVisible) FocusScope.of(context).unfocus();
+              });
+            },
+          ),
         ),
       ),
     );
@@ -217,7 +478,7 @@ class _ChatPageState extends State<ChatPage> {
     );
   }
 */
-
+  /*
   Widget _buildPersistentPicker() {
     return Container(
       height: 250,
@@ -281,6 +542,7 @@ class _ChatPageState extends State<ChatPage> {
       ),
     );
   }
+  */
 
   // --- ANTEPRIMA MESSAGGIO IN COMPOSIZIONE ---
   Widget _buildComposerPreview() {

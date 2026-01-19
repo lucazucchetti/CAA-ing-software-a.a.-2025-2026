@@ -1,4 +1,6 @@
 import 'package:chatbypics/screens/ccnManagePage.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:chatbypics/screens/chatListPage.dart';
 import 'package:chatbypics/screens/settingPage.dart';
@@ -15,74 +17,96 @@ class Homepage extends StatefulWidget{
 }
 
 class _HomepageState extends State<Homepage> {
-  //Indice della tab selezionata (0 = Chat)
-  int _selectedIndex = 0; 
+  int _selectedIndex = 0;
+  String _userRole = ""; // Qui salveremo se è "Tutor" o altro
+  bool _isLoading = true; // Per aspettare il caricamento del ruolo
 
-  //Lista delle pagine da mostrare
-  static final List<Widget> _pages = <Widget>[
-    const ChatListPage(), //pagina 0: Lista delle chat
-    const CCNManagePage(), //pagina 1: Lista per gestire CCN
-    const SettingPage(), //pagina 2: Impostazioni
-  ];
-  
-  //Funzione per cambiare tab quando si clicca
-  void _onItemTapped(int index){
-    setState(() {
-      _selectedIndex = index;
-    });
+  @override
+  void initState() {
+    super.initState();
+    _checkUserRole();
+  }
+
+  // 1. CONTROLLIAMO IL RUOLO SU FIREBASE
+  Future<void> _checkUserRole() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+      if (mounted) {
+        setState(() {
+          // Assicurati che nel DB il campo si chiami 'ruolo' e il valore sia 'Tutor'
+          // Se hai usato un booleano, cambia in: _isTutor = data['isTutor'] == true;
+          _userRole = doc.data()?['ruolo'] ?? "Utente"; 
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    // TODO: implement build
+    // Se stiamo ancora caricando, mostriamo una rotellina
+    if (_isLoading) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
+    // 2. COSTRUIAMO LE LISTE IN BASE AL RUOLO
+    // Lista delle Pagine
+    List<Widget> pages = [
+      const ChatListPage(), // Indice 0: Sempre visibile
+    ];
+
+    // Lista dei Bottoni
+    List<BottomNavigationBarItem> navItems = [
+      const BottomNavigationBarItem(
+        icon: Icon(Icons.chat_bubble_outline), 
+        activeIcon: Icon(Icons.chat_bubble),
+        label: "Chats"
+      ),
+    ];
+
+    // --- BLOCCO SOLO PER TUTOR ---
+    if (_userRole == "Tutor") { // <--- IL FILTRO MAGICO
+      pages.add(const CCNManagePage()); // La pagina dello screenshot (Gestione Utenti)
+      navItems.add(
+        const BottomNavigationBarItem(
+          icon: Icon(Icons.group_outlined), 
+          activeIcon: Icon(Icons.group),
+          label: "Utenti CCN"
+        )
+      );
+    }
+    // -----------------------------
+
+    // Aggiungiamo le Impostazioni (visibili a tutti)
+    pages.add(const SettingPage()); // Sostituisci col nome della tua pagina impostazioni
+    navItems.add(
+      const BottomNavigationBarItem(
+        icon: Icon(Icons.settings_outlined), 
+        activeIcon: Icon(Icons.settings),
+        label: "Impostazioni"
+      )
+    );
+
     return Scaffold(
-      /*
-      App bar viene messa nelle singole pagine, così da 
-      personalizzare il titolo per ogni pagina
-      */
-      body: _pages[_selectedIndex],
-      bottomNavigationBar: NavigationBarTheme(
-        data: NavigationBarThemeData(
-          indicatorColor: Colors.blue.shade100,
-          labelTextStyle: WidgetStateProperty.all(
-            const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w500
-            ),    
-          ),
-        ),
-        child: NavigationBar(
-          height: 70,
-          selectedIndex: _selectedIndex,
-          onDestinationSelected: _onItemTapped,
-          destinations: const [
-            // 0. CHAT
-            NavigationDestination(
-              icon: Badge(
-                label: Text('6'), //esempio numero notifiche
-                backgroundColor: Colors.blue,
-                textColor: Colors.white,
-                child: Icon(Icons.chat_bubble_outline),
-              ),
-              selectedIcon: Icon(Icons.chat_bubble),
-              label: 'Chats'
-            ),
-
-            //1. GESTIONE CCN
-            NavigationDestination(
-              icon: Icon(Icons.people_alt_outlined), 
-              selectedIcon: Icon(Icons.people_alt_rounded),
-              label: 'Utenti CCN'
-            ),
-
-            //2. Impostazioni
-            NavigationDestination(
-              icon: Icon(Icons.settings_outlined),
-              selectedIcon: Icon(Icons.settings),
-              label: 'Impostazioni'
-            ),
-          ]
-        ),
+      // Mostra la pagina corretta dalla lista dinamica
+      body: pages[_selectedIndex],
+      
+      bottomNavigationBar: NavigationBar( // O BottomNavigationBar
+        selectedIndex: _selectedIndex,
+        onDestinationSelected: (index) {
+          setState(() {
+            _selectedIndex = index;
+          });
+        },
+        destinations: navItems.map((item) {
+          // Adattamento se usi NavigationBar invece di BottomNavigationBar
+          return NavigationDestination(
+            icon: item.icon, 
+            selectedIcon: item.activeIcon,
+            label: item.label!,
+          );
+        }).toList(),
       ),
     );
   }

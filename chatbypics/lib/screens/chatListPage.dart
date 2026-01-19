@@ -14,14 +14,66 @@ class ChatListPage extends StatefulWidget {
 class _ChatListPageState extends State<ChatListPage> {
   final String currentUserId = FirebaseAuth.instance.currentUser!.uid;
 
+  bool _isSearching = false; // Se stiamo cercando o no
+  final TextEditingController _searchController = TextEditingController();
+  String _searchText = ""; // Il testo effettivo che stiamo cercando
+
+  @override
+  void initState() {
+    super.initState();
+    // Ascoltiamo cosa scrive l'utente in tempo reale
+    _searchController.addListener(() {
+      setState(() {
+        _searchText = _searchController.text.trim().toLowerCase();
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+  
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Le tue Chat"),
+        // SE STO CERCANDO -> MOSTRA TEXTFIELD, ALTRIMENTI -> MOSTRA TITOLO
+        title: _isSearching
+            ? TextField(
+                controller: _searchController,
+                autofocus: true, // Apre la tastiera subito
+                style: const TextStyle(color: Colors.black),
+                decoration: const InputDecoration(
+                  hintText: "Cerca nome...",
+                  border: InputBorder.none,
+                  hintStyle: TextStyle(color: Colors.grey),
+                ),
+              )
+            : const Text("Le tue Chat", style: TextStyle(color: Colors.black)),
+            
         backgroundColor: Colors.deepPurple.shade100,
+        iconTheme: const IconThemeData(color: Colors.black), // Icone nere per contrasto
+        
         actions: [
-          IconButton(icon: const Icon(Icons.search), onPressed: () {}),
+          // GESTIONE DEL TASTO (LENTE o X)
+          IconButton(
+            icon: Icon(_isSearching ? Icons.close : Icons.search),
+            onPressed: () {
+              setState(() {
+                if (_isSearching) {
+                  // Se stavo cercando e clicco X -> Chiudo e resetto
+                  _isSearching = false;
+                  _searchController.clear();
+                  _searchText = "";
+                } else {
+                  // Se clicco la lente -> Apro la ricerca
+                  _isSearching = true;
+                }
+              });
+            },
+          ),
         ],
       ),
       
@@ -62,42 +114,53 @@ class _ChatListPageState extends State<ChatListPage> {
               return FutureBuilder<DocumentSnapshot>(
                 future: FirebaseFirestore.instance.collection('users').doc(friendUid).get(),
                 builder: (context, userSnapshot) {
-                  if (!userSnapshot.hasData) {
-                    return const SizedBox(); // In attesa dei dati mostro nulla o uno scheletro
+                if (!userSnapshot.hasData) {
+                  return const SizedBox(); 
+                }
+
+                var userData = userSnapshot.data!.data() as Map<String, dynamic>?;
+                String friendName = userData != null 
+                  ? "${userData['Nome']} ${userData['Cognome']}" 
+                  : "Utente sconosciuto";
+
+                // --- LOGICA DI FILTRO ---
+                // Se sto cercando E il nome non contiene quello che ho scritto...
+                if (_isSearching && _searchText.isNotEmpty) {
+                  if (!friendName.toLowerCase().contains(_searchText)) {
+                    // ... Restituisco un widget invisibile (nascondo la riga)
+                    return const SizedBox.shrink();
                   }
+                }
+                // -----------------------
 
-                  var userData = userSnapshot.data!.data() as Map<String, dynamic>?;
-                  String friendName = userData != null 
-                      ? "${userData['Nome']} ${userData['Cognome']}" 
-                      : "Utente sconosciuto";
-
-                  // Dati dell'ultimo messaggio per l'anteprima
-                  Map<String, dynamic> lastMsg = chatData['lastMessageData'] ?? {};
-                  String lastMsgText = lastMsg['description'] ?? "Foto inviata";
-                  
-                  return ListTile(
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    leading: CircleAvatar(
-                      backgroundColor: Colors.deepPurple.shade200,
-                      child: Text(friendName[0].toUpperCase(), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                // Dati dell'ultimo messaggio... (tuo codice precedente)
+                Map<String, dynamic> lastMsg = chatData['lastMessageData'] ?? {};
+                String lastMsgText = lastMsg['description'] ?? "Foto inviata";
+              
+                return ListTile(
+                  // ... (tutto il resto del tuo ListTile rimane uguale)
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  leading: CircleAvatar(
+                    backgroundColor: Colors.deepPurple.shade200,
+                    child: Text(friendName.isNotEmpty ? friendName[0].toUpperCase() : "?", 
+                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  ),
+                  title: Text(friendName, style: const TextStyle(fontWeight: FontWeight.bold)),
+                  subtitle: Text(
+                    lastMsgText, 
+                    maxLines: 1, 
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(color: Colors.grey.shade600),
+                  ),
+                  onTap: () {
+                    Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => ChatPage(chatID: chatId, chatName: friendName),
                     ),
-                    title: Text(friendName, style: const TextStyle(fontWeight: FontWeight.bold)),
-                    subtitle: Text(
-                      lastMsgText, 
-                      maxLines: 1, 
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(color: Colors.grey.shade600),
-                    ),
-                    onTap: () {
-                      // APRE LA CHAT VERA
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => ChatPage(chatID: chatId, chatName: friendName),
-                        ),
-                      );
-                    },
-                  );
+                    );
+                  },
+                );
                 },
               );
             },
