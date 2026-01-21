@@ -7,6 +7,7 @@ import 'package:chatbypics/services/pictogram_service.dart';
 class ChatPage extends StatefulWidget {
   final String chatID;
   final String chatName;
+  
 
   const ChatPage({
     super.key,
@@ -16,6 +17,8 @@ class ChatPage extends StatefulWidget {
 
   @override
   State<ChatPage> createState() => _ChatPageState();
+
+  
 }
 
 class _ChatPageState extends State<ChatPage> {
@@ -29,6 +32,7 @@ class _ChatPageState extends State<ChatPage> {
   bool _isLoading = false;
   bool _showingCategories = true; // Se true mostra le cartelle, se false i simboli
   String _currentCategoryName = ""; // Titolo della categoria attuale
+  List<Map<String, String>> _visibleCategories = [];
 
   //Lista delle categorie con la relativa immagine di copertina
   final List<Map<String, String>> _categories = [
@@ -239,18 +243,31 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   // --- VISTA 1: GRIGLIA DELLE CATEGORIE ---
+  // --- VISTA 1: GRIGLIA DELLE CATEGORIE FILTRATA ---
   Widget _buildCategoriesGrid() {
+    // Se la lista è vuota, potrebbe essere che sta ancora caricando o che l'utente non ha permessi.
+    // Possiamo mostrare un caricamento se _visibleCategories è vuota ma _categories no.
+    if (_visibleCategories.isEmpty) {
+       // Piccolo controllo: se l'utente ha davvero 0 permessi mostriamo "Nessuna categoria"
+       // Per ora assumiamo sia caricamento iniziale
+       // Se vuoi gestire il caso "0 permessi", servirebbe una variabile bool _permissionsLoaded
+       return const Center(child: CircularProgressIndicator()); 
+    }
+
     return GridView.builder(
       padding: const EdgeInsets.all(10),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3, // 3 colonne per le categorie
+        crossAxisCount: 3,
         crossAxisSpacing: 10,
         mainAxisSpacing: 10,
-        childAspectRatio: 0.9, // Leggermente più alte che larghe
+        childAspectRatio: 0.9,
       ),
-      itemCount: _categories.length,
+      // USA LA LISTA FILTRATA
+      itemCount: _visibleCategories.length, 
       itemBuilder: (context, index) {
-        final cat = _categories[index];
+        // PRENDI L'ELEMENTO DALLA LISTA FILTRATA
+        final cat = _visibleCategories[index]; 
+        
         return GestureDetector(
           onTap: () => _selectCategory(cat['name']!, cat['term']!),
           child: Container(
@@ -263,7 +280,6 @@ class _ChatPageState extends State<ChatPage> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Icona Categoria
                 Image.network(
                   cat['img']!, 
                   height: 50,
@@ -271,7 +287,6 @@ class _ChatPageState extends State<ChatPage> {
                   errorBuilder: (ctx, err, st) => const Icon(Icons.folder, size: 50, color: Colors.orange),
                 ),
                 const SizedBox(height: 8),
-                // Nome Categoria
                 Text(
                   cat['name']!,
                   style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
@@ -650,4 +665,44 @@ class _ChatPageState extends State<ChatPage> {
       _isPickerVisible = false; // Per chiudere dopo l'invio
     });
   }
+  
+  Future<void> _loadUserPermissions() async {
+    try {
+      // 1. Leggi il documento dell'utente attuale
+      final userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(_auth.currentUser!.uid)
+          .get();
+
+      if (userDoc.exists && mounted) {
+        // 2. Prendi la lista dei permessi (se esiste)
+        // Se il campo 'enabledCategories' è null (utenti vecchi), mostriamo tutto per sicurezza.
+        List<dynamic>? allowedNames = userDoc.data()?['enabledCategories'];
+
+        setState(() {
+          if (allowedNames == null) {
+            // Caso: Il campo non esiste -> Mostra TUTTO
+            _visibleCategories = List.from(_categories);
+          } else {
+            // Caso: Il campo esiste -> Filtra solo quelli presenti nella lista
+            _visibleCategories = _categories.where((cat) {
+              return allowedNames.contains(cat['name']);
+            }).toList();
+          }
+        });
+      }
+    } catch (e) {
+      print("Errore caricamento permessi: $e");
+      // In caso di errore, nel dubbio mostriamo tutto
+      setState(() => _visibleCategories = List.from(_categories));
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    // Carica i permessi appena entri in chat
+    _loadUserPermissions();
+  }
+
 }
