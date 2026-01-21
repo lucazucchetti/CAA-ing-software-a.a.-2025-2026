@@ -150,7 +150,7 @@ class _AddCcnPageState extends State<AddCcnPage> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Utente CCN creato con successo! ✅")),
+          const SnackBar(content: Text("Utente CCN creato con successo!")),
         );
         Navigator.pop(context); // Torna indietro alla lista
       }
