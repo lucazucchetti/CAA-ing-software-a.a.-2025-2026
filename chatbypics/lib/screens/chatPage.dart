@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:chatbypics/services/preferences_service.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 
 class ChatPage extends StatefulWidget {
   final String chatID;
@@ -25,6 +26,9 @@ class _ChatPageState extends State<ChatPage> {
   final List<Map<String, String>> _composingMessage = [];
   double _gridSize = 3.0;
   bool _showLabels = true;
+  final FlutterTts flutterTts = FlutterTts();
+  double _ttsSpeed = 0.5; // Velocità normale (0.0 a 1.0)
+  bool _autoReadMessages = true;
   @override
 
   final List<Map<String, String>> _samplePictograms = [
@@ -38,7 +42,16 @@ class _ChatPageState extends State<ChatPage> {
   @override
   void initState() {
     super.initState();
-    _loadPreferences(); // scarica le impostazioni appena entri in chat
+    _loadPreferences();
+    _initTts();// scarica le impostazioni appena entri in chat
+  }
+  void _initTts() async {
+    await flutterTts.setLanguage("it-IT"); // Imposta Italiano
+    await flutterTts.setPitch(1.0);
+    var isLanguageAvailable = await flutterTts.isLanguageAvailable("it-IT");
+    if (!isLanguageAvailable) {
+      print("Errore: La lingua italiana non è installata sul dispositivo");
+    }
   }
   Future<void> _loadPreferences() async {
     final user = _auth.currentUser;
@@ -52,11 +65,20 @@ class _ChatPageState extends State<ChatPage> {
           if (prefs.containsKey(PreferencesService.keyGridSize)) {
             _gridSize = (prefs[PreferencesService.keyGridSize] as num).toDouble();
           }
+          if (prefs.containsKey(PreferencesService.keyAutoRead)) {
+            _autoReadMessages = prefs[PreferencesService.keyAutoRead];
+          }
           if (prefs.containsKey(PreferencesService.keyShowLabels)) {
             _showLabels = prefs[PreferencesService.keyShowLabels];
           }
         });
       }
+    }
+  }
+
+  Future<void> _speak(String text) async {
+    if (text.isNotEmpty) {
+      await flutterTts.speak(text);
     }
   }
 
@@ -124,9 +146,14 @@ class _ChatPageState extends State<ChatPage> {
     // Recuperiamo la lista di pittogrammi dal documento
     List<dynamic> pictograms = data['pictograms'] ?? [];
 
+    String fullSentence = pictograms.map((p) => p['description'] ?? '').join(" ");
     int itemsPerRow = _gridSize.toInt();
     if (itemsPerRow < 1) itemsPerRow = 1;
-    return Align(
+    return GestureDetector(
+      onTap: () {
+        _speak(fullSentence); // Quando tocchi, legge la frase
+      },
+      child: Align(
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
         constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.8),
@@ -155,6 +182,7 @@ class _ChatPageState extends State<ChatPage> {
           }).toList(),
         ),
       ),
+      )
     );
   }
 
