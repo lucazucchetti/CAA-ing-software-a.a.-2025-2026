@@ -6,37 +6,65 @@ class PictogramService {
   final String _baseUrl = "https://api.arasaac.org/api/pictograms";
   final String _imageBaseUrl = "https://static.arasaac.org/pictograms";
 
-  // Funzione per cercare pittogrammi in ITALIANO
+  // --- 1. BLACKLIST: Parole chiave da escludere ---
+  final List<String> _blacklist = [
+    // Sfera sessuale / anatomica intima
+    "sesso", "masturbarsi", "pene", "vagina", "vulva", "testicoli", "nudo", "seno", "seni",
+    "coito", "erotico", "preservativo", "incesto", "orgasmo", "genitali",
+    "porno", "sperma",
+    // Sfera violenza / crimine
+    "uccidere", "picchiare", "violenza", "sangue", "abuso", "armi", "pistola",
+    "coltello", "suicidio", "droga", "cocaina", "eroina", "ubriaco", "alcol",
+    // Altro
+    "feci", "urine"
+  ];
+
+  // Funzione per cercare pittogrammi in italiano
   Future<List<Map<String, String>>> searchPictograms(String query) async {
     if (query.trim().isEmpty) return [];
 
     try {
-      // 1. Chiamata all'API di ricerca (in italiano 'it')
       final url = Uri.parse('$_baseUrl/it/search/$query');
       final response = await http.get(url);
 
       if (response.statusCode == 200) {
-        // 2. Decodifica la risposta JSON
         List<dynamic> data = json.decode(response.body);
 
-        // 3. Trasforma i dati in una lista semplice per la nostra app
-        return data.map<Map<String, String>>((pic) {
-          int id = pic['_id']; // L'ID univoco del pittogramma
-          
-          // Cerchiamo la parola chiave più adatta (spesso è la prima)
-          // A volte l'API restituisce keywords diverse, prendiamo la stringa cercata o la prima disponibile
-          String label = query; 
+        // --- 2. FILTRAGGIO E LIMITAZIONE ---
+        var filteredData = data.where((pic) {
+          // Controllo se tra le keyword del pittogramma c'è qualcosa di vietato
+          if (pic['keywords'] != null) {
+            for (var k in pic['keywords']) {
+              String keyword = k['keyword'].toString().toLowerCase();
+
+              // Se la keyword contiene una parola della blacklist, scartiamo il pittogramma
+              if (_blacklist.any((badWord) => keyword.contains(badWord))) {
+                return false;
+              }
+            }
+          }
+          return true; // Se passa i controlli, lo teniamo
+        });
+
+        // --- 3. LIMITIAMO IL NUMERO DI RISULTATI ---
+        // Prendiamo solo i primi 30 risultati per evitare confusione
+        var limitedData = filteredData.take(30);
+
+        return limitedData.map<Map<String, String>>((pic) {
+          int id = pic['_id'];
+
+          String label = query;
           if (pic['keywords'] != null && (pic['keywords'] as List).isNotEmpty) {
-             label = pic['keywords'][0]['keyword'];
+            label = pic['keywords'][0]['keyword'];
           }
 
           return {
             'id': id.toString(),
-            // Costruiamo l'URL dell'immagine (300px è una buona risoluzione)
             'url': '$_imageBaseUrl/$id/${id}_300.png',
             'desc': label,
           };
         }).toList();
+
       } else {
         print("Errore API Arasaac: ${response.statusCode}");
         return [];
@@ -46,4 +74,5 @@ class PictogramService {
       return [];
     }
   }
+
 }
