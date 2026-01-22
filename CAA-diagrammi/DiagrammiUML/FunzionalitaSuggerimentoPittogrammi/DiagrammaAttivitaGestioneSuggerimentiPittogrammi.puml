@@ -1,0 +1,29 @@
+@startuml DiagrammaAttivitaGestionePittogrammi
+start
+repeat
+repeat
+:attendi nuovo pittogramma inserito; <<timeEvent>>
+repeat while(esisteva un pittogramma inserito precedentemente al nuovo?) is (no) not (yes)
+    :prendi id pittogramma precedente;
+    :prendi URL pittogramma nuovo;
+    :leggi file json;
+    :salva dati dei suggerimenti sul json in memoria;
+if(esiste una lista di suggerimenti per il vecchio id?) then (yes)
+    :salva lista dei suggerimenti;
+else(no)
+    :crea lista suggerimenti per il vecchio id;
+endif
+if(esiste nella lista suggerimenti salvata l'URL nuovo) then(yes)
+    :rimuovi l'URL nuovo dalla lista;
+else (no)
+endif 
+:inserisci il nuovo URL in testa alla lista suggerimenti;
+
+if(lista suggerimenti>3 elementi?) then (yes)
+    :rimuovi ultimo elemento della lista;
+else (no)
+endif
+:scrivi sul file Json le modifiche;
+:chiudi file Json;
+
+@enduml
