@@ -1,8 +1,15 @@
 import 'package:chatbypics/screens/suggerimenti/stileSuggerimenti/StileSingoloSuggerimento.dart';
 import 'package:flutter/material.dart';
 
+///Classe che implementa il singolo suggerimento andando a stampare il singolo
+///pittogramma e permettendogli di aggiornare i suggerimenti e la chat se premuto
+///
 class SingoloSuggerimento extends StatelessWidget {
+  ///String[url] è l'url del pittogramma da suggerire
   final String url;
+  ///VoidCallBack[funzioneAggiornaSuggerimenti] è la funzione da eseguire
+  ///nel pittogramma quando viene premuto
+  ///aggiorna i suggerimenti e la chat
   final VoidCallback funzioneAggiornaSuggerimenti;
 
   const SingoloSuggerimento ({
@@ -14,16 +21,17 @@ class SingoloSuggerimento extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: Stilesingolosuggerimento.paddingImmagini,
+      padding: StileSingoloSuggerimento.paddingImmagini,
       child: GestureDetector(
-        onTap: funzioneAggiornaSuggerimenti, //funzione sopra
+        ///quando viene selezionato il pittogramma esegue la funzione passata
+        onTap: funzioneAggiornaSuggerimenti,
         child: Container(
-          width: Stilesingolosuggerimento.larghezzaContainer,
-          height: Stilesingolosuggerimento.altezzaContainer,
-          decoration: Stilesingolosuggerimento.boxImmagini,
+          width: StileSingoloSuggerimento.larghezzaContainer,
+          height: StileSingoloSuggerimento.altezzaContainer,
+          decoration: StileSingoloSuggerimento.boxImmagini,
           child: Padding(
-            padding: Stilesingolosuggerimento.paddingDellImm,
-            child: Image.network(url, fit: Stilesingolosuggerimento.espansioneImm),
+            padding: StileSingoloSuggerimento.paddingDellImm,
+            child: Image.network(url, fit: StileSingoloSuggerimento.espansioneImm),
           ),
         ),
       ),

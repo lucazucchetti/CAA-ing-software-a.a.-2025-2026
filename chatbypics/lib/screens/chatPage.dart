@@ -115,7 +115,8 @@ class _ChatPageState extends State<ChatPage> {
     _initTts();// scarica le impostazioni appena entri in chat
     // Carica i permessi appena entri in chat
     _loadUserPermissions();
-    //Leggo i suggerimenti
+
+    ///leggo il file json, carico i dati nella struttura dati
     GestoreJson().leggiJson();
   }
   void _initTts() async {
@@ -166,12 +167,26 @@ class _ChatPageState extends State<ChatPage> {
   }
   */
 
+  ///[_aggiungiPittogramma] funzione che permette di aggiornare i suggerimenti
+  ///nel file json quando si inserisce un nuovo pittogramma e aggiunge alla barra
+  ///di composizione del messaggio il nuovo pittogramma.
+  ///
+  ///1a parte:
+  /// Controlla che [_composingMessage] non sia vuoto(quindi è presente un
+  /// pittogramma passato), recupera il pittogramma passato e ricava l'id
+  /// (parte finale dell'url) poi usa il GestoreJson per aggiornare i suggerimenti
+  /// dell'id con il newURL passato come parametro.
+  ///
+  ///2a parte:
+  /// Aggiorna aggiorna lo stato della barra di composizione messaggi
+  /// aggiungendo il nuovo pittogramma.
+  ///
+  /// __parametri String newURL: url del pittogramma nuovo inserito, String desc, descrizione del pittogramma__
+  ///
   void _aggiungiPittogramma(String newURL, String desc) {
     if (_composingMessage.isNotEmpty) {
       String oldURL = _composingMessage.last['url']!;
-      String oldId = oldURL
-          .split('/')
-          .last;
+      String oldId = oldURL.split('/').last;
 
       GestoreJson().aggiornamentoSuggerimenti(oldId, newURL);
     }
@@ -228,7 +243,7 @@ class _ChatPageState extends State<ChatPage> {
 
           if (_composingMessage.isNotEmpty) _buildComposerPreview(),
           _buildInputArea(),
-          //6. AREA SUGGERIMENTI
+          ///area suggerimenti, mostrata se _isPickerVisible è attivo
           if (_isPickerVisible) _buildSuggerimenti(),
           // 4. Selettore Pittogrammi Persistente
           if (_isPickerVisible) _buildPersistentPicker(),
@@ -466,6 +481,7 @@ class _ChatPageState extends State<ChatPage> {
         final pic = _currentSymbols[index];
         return GestureDetector(
           onTap: () {
+            ///aggiungo il pittogramma selezionato e aggiorno i suggerimenti
             _aggiungiPittogramma(pic['url']!, pic['desc']!);
             // NON chiudiamo il pannello, così può aggiungerne altri
           },
@@ -611,20 +627,25 @@ class _ChatPageState extends State<ChatPage> {
     );
   }
 
-  //BUILDER PER I SUGGERIMENTI
+  ///Builder della barra dei suggerimenti
   Widget _buildSuggerimenti() {
+    ///se non ce nessun messaggio non mostro nulls
     if (_composingMessage.isEmpty) return SizedBox.shrink();
 
+    ///Ricavo l'id dell'ultimo pittogramma inserito
     String ultimoURL = _composingMessage.last['url']!;
-    String ultimoId = ultimoURL
-        .split('/')
-        .last;
+    String ultimoId = ultimoURL.split('/').last;
+
+    ///ricavo i suggerimenti di quell'id e ricavo gli url sottoforma di lista
     List<dynamic> suggerimenti = GestoreJson().suggerimentiDiImmagine(ultimoId);
     List<String> listaUrl = List<String>.from(suggerimenti);
 
-    //nascondiamo la barra suggerunebtu se non ci sono
+    ///se non c'è nessun suggerimento allora non mostro nulla
     if (suggerimenti.isEmpty) return SizedBox.shrink();
 
+    ///costruisco la barra dei suggerimenti, passondo la lista degli url
+    ///dei pittogrammi da suggerire, e la funzione da eseguire quando si preme sul
+    ///pittogramma suggerito con parametro la stringa url del pittogramma schiacciato
     return Suggerimenti(
       dati: listaUrl,
       selezionato: (urlCliccato) {
