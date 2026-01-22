@@ -1,12 +1,16 @@
+import 'package:chatbypics/screens/suggerimenti/Suggerimenti.dart';
 import 'package:chatbypics/services/chat_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:chatbypics/services/pictogram_service.dart';
+import 'package:flutter/services.dart';
+import 'package:chatbypics/services/GestoreJson.dart';
 
 class ChatPage extends StatefulWidget {
   final String chatID;
   final String chatName;
+
 
   const ChatPage({
     super.key,
@@ -16,6 +20,8 @@ class ChatPage extends StatefulWidget {
 
   @override
   State<ChatPage> createState() => _ChatPageState();
+
+
 }
 
 class _ChatPageState extends State<ChatPage> {
@@ -25,25 +31,91 @@ class _ChatPageState extends State<ChatPage> {
 
   // STATO PER LA RICERCA / CATEGORIE
   final TextEditingController _searchController = TextEditingController();
-  List<Map<String, String>> _currentSymbols = []; // I simboli visualizzati al momento
+  List<Map<String, String>> _currentSymbols = [
+  ]; // I simboli visualizzati al momento
   bool _isLoading = false;
   bool _showingCategories = true; // Se true mostra le cartelle, se false i simboli
   String _currentCategoryName = ""; // Titolo della categoria attuale
+  List<Map<String, String>> _visibleCategories = [];
 
   //Lista delle categorie con la relativa immagine di copertina
   final List<Map<String, String>> _categories = [
-    {'name': 'Persone', 'term': 'persone', 'img': 'https://static.arasaac.org/pictograms/2649/2649_300.png'},
-    {'name': 'Azioni', 'term': 'verbi', 'img': 'https://static.arasaac.org/pictograms/6873/6873_300.png'},
-    {'name': 'Emozioni', 'term': 'emozioni', 'img': 'https://static.arasaac.org/pictograms/8582/8582_300.png'},
-    {'name': 'Alimentazione', 'term': 'alimenti', 'img': 'https://static.arasaac.org/pictograms/2534/2534_300.png'},
-    {'name': 'Luoghi', 'term': 'luoghi', 'img': 'https://static.arasaac.org/pictograms/32598/32598_300.png'},
-    {'name': 'Scuola', 'term': 'scuola', 'img': 'https://static.arasaac.org/pictograms/15515/15515_300.png'},
-    {'name': 'Corpo', 'term': 'corpo umano', 'img': 'https://static.arasaac.org/pictograms/6473/6473_nocolor_500.png'},
-    {'name': 'Vestiti', 'term': 'abbigliamento', 'img': 'https://static.arasaac.org/pictograms/2613/2613_300.png'},
-    {'name': 'Saluti', 'term': 'saluti sociali', 'img': 'https://static.arasaac.org/pictograms/2347/2347_300.png'},
-    {'name': 'Aggettivi', 'term': 'aggettivi', 'img': 'https://static.arasaac.org/pictograms/32584/32584_300.png'},
-    
+    {
+      'name': 'Persone',
+      'term': 'persone',
+      'img': 'https://static.arasaac.org/pictograms/2649/2649_300.png'
+    },
+    {
+      'name': 'Azioni',
+      'term': 'verbi',
+      'img': 'https://static.arasaac.org/pictograms/6873/6873_300.png'
+    },
+    {
+      'name': 'Emozioni',
+      'term': 'emozioni',
+      'img': 'https://static.arasaac.org/pictograms/8582/8582_300.png'
+    },
+    {
+      'name': 'Alimentazione',
+      'term': 'alimenti',
+      'img': 'https://static.arasaac.org/pictograms/2534/2534_300.png'
+    },
+    {
+      'name': 'Luoghi',
+      'term': 'luoghi',
+      'img': 'https://static.arasaac.org/pictograms/32598/32598_300.png'
+    },
+    {
+      'name': 'Scuola',
+      'term': 'scuola',
+      'img': 'https://static.arasaac.org/pictograms/15515/15515_300.png'
+    },
+    {
+      'name': 'Corpo',
+      'term': 'corpo umano',
+      'img': 'https://static.arasaac.org/pictograms/6473/6473_nocolor_500.png'
+    },
+    {
+      'name': 'Vestiti',
+      'term': 'abbigliamento',
+      'img': 'https://static.arasaac.org/pictograms/2613/2613_300.png'
+    },
+    {
+      'name': 'Saluti',
+      'term': 'saluti sociali',
+      'img': 'https://static.arasaac.org/pictograms/2347/2347_300.png'
+    },
+    {
+      'name': 'Aggettivi',
+      'term': 'aggettivi',
+      'img': 'https://static.arasaac.org/pictograms/32584/32584_300.png'
+    },
+
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    // Carica i permessi appena entri in chat
+    _loadUserPermissions();
+    //Leggo i suggerimenti
+    GestoreJson().leggiJson();
+  }
+
+  void _aggiungiPittogramma(String newURL, String desc) {
+    if (_composingMessage.isNotEmpty) {
+      String oldURL = _composingMessage.last['url']!;
+      String oldId = oldURL
+          .split('/')
+          .last;
+
+      GestoreJson().aggiornamentoSuggerimenti(oldId, newURL);
+    }
+
+    setState(() {
+      _composingMessage.add({'url': newURL, 'desc': desc});
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -73,13 +145,15 @@ class _ChatPageState extends State<ChatPage> {
 
                 // Se non ci sono messaggi, mostra un avviso amichevole
                 if (messages.isEmpty) {
-                  return const Center(child: Text("Inizia a comunicare con i pittogrammi!"));
+                  return const Center(
+                      child: Text("Inizia a comunicare con i pittogrammi!"));
                 }
 
                 return ListView.builder(
                   reverse: true, // I messaggi partono dal basso
                   itemCount: messages.length,
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 20),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 10, vertical: 20),
                   itemBuilder: (context, index) {
                     return _buildMessageItem(messages[index]);
                   },
@@ -94,12 +168,16 @@ class _ChatPageState extends State<ChatPage> {
           // 3. BARRA DI INPUT
           _buildInputArea(),
 
+          //6. AREA SUGGERIMENTI
+          if (_isPickerVisible) _buildSuggerimenti(),
+
           // 4. Selettore Pittogrammi Persistente
           if (_isPickerVisible) _buildPersistentPicker(),
         ],
       ),
     );
   }
+
   // --- LOGICA DI NAVIGAZIONE E RICERCA ---
 
   // 1. Quando si clicca una categoria
@@ -177,10 +255,11 @@ class _ChatPageState extends State<ChatPage> {
                 // Tasto Indietro (visibile solo se non siamo nelle categorie)
                 if (!_showingCategories)
                   IconButton(
-                    icon: const Icon(Icons.arrow_back, color: Colors.deepPurple),
+                    icon: const Icon(
+                        Icons.arrow_back, color: Colors.deepPurple),
                     onPressed: _backToCategories,
                   ),
-                
+
                 // Barra di ricerca
                 Expanded(
                   child: TextField(
@@ -188,8 +267,11 @@ class _ChatPageState extends State<ChatPage> {
                     decoration: InputDecoration(
                       hintText: "Cerca simbolo...",
                       isDense: true,
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(20), borderSide: BorderSide.none),
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 10),
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(20),
+                          borderSide: BorderSide.none),
                       filled: true,
                       fillColor: Colors.white,
                       prefixIcon: const Icon(Icons.search, size: 20),
@@ -197,13 +279,13 @@ class _ChatPageState extends State<ChatPage> {
                     onSubmitted: (_) => _performTextSearch(),
                   ),
                 ),
-                
+
                 // Tasto Cerca (se si scrive a mano)
                 IconButton(
                   icon: const Icon(Icons.search, color: Colors.deepPurple),
                   onPressed: _performTextSearch,
                 ),
-                
+
                 // Tasto Chiudi Tutto
                 IconButton(
                   icon: const Icon(Icons.close, color: Colors.grey),
@@ -221,17 +303,18 @@ class _ChatPageState extends State<ChatPage> {
               color: Colors.deepPurple.shade50,
               child: Text(
                 _currentCategoryName,
-                style: TextStyle(fontWeight: FontWeight.bold, color: Colors.deepPurple.shade900),
+                style: TextStyle(fontWeight: FontWeight.bold,
+                    color: Colors.deepPurple.shade900),
               ),
             ),
 
           // C. CONTENUTO PRINCIPALE (Grid Categorie O Grid Simboli)
           Expanded(
-            child: _isLoading 
+            child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
-                : _showingCategories 
-                    ? _buildCategoriesGrid() // Mostra le cartelle
-                    : _buildSymbolsGrid(),   // Mostra i pittogrammi
+                : _showingCategories
+                ? _buildCategoriesGrid() // Mostra le cartelle
+                : _buildSymbolsGrid(), // Mostra i pittogrammi
           ),
         ],
       ),
@@ -239,18 +322,31 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   // --- VISTA 1: GRIGLIA DELLE CATEGORIE ---
+  // --- VISTA 1: GRIGLIA DELLE CATEGORIE FILTRATA ---
   Widget _buildCategoriesGrid() {
+    // Se la lista è vuota, potrebbe essere che sta ancora caricando o che l'utente non ha permessi.
+    // Possiamo mostrare un caricamento se _visibleCategories è vuota ma _categories no.
+    if (_visibleCategories.isEmpty) {
+      // Piccolo controllo: se l'utente ha davvero 0 permessi mostriamo "Nessuna categoria"
+      // Per ora assumiamo sia caricamento iniziale
+      // Se vuoi gestire il caso "0 permessi", servirebbe una variabile bool _permissionsLoaded
+      return const Center(child: CircularProgressIndicator());
+    }
+
     return GridView.builder(
       padding: const EdgeInsets.all(10),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3, // 3 colonne per le categorie
+        crossAxisCount: 3,
         crossAxisSpacing: 10,
         mainAxisSpacing: 10,
-        childAspectRatio: 0.9, // Leggermente più alte che larghe
+        childAspectRatio: 0.9,
       ),
-      itemCount: _categories.length,
+      // USA LA LISTA FILTRATA
+      itemCount: _visibleCategories.length,
       itemBuilder: (context, index) {
-        final cat = _categories[index];
+        // PRENDI L'ELEMENTO DALLA LISTA FILTRATA
+        final cat = _visibleCategories[index];
+
         return GestureDetector(
           onTap: () => _selectCategory(cat['name']!, cat['term']!),
           child: Container(
@@ -258,23 +354,28 @@ class _ChatPageState extends State<ChatPage> {
               color: Colors.white,
               border: Border.all(color: Colors.deepPurple.shade100, width: 2),
               borderRadius: BorderRadius.circular(12),
-              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 4)],
+              boxShadow: [
+                BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 4)
+              ],
             ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Icona Categoria
                 Image.network(
-                  cat['img']!, 
+                  cat['img']!,
                   height: 50,
-                  loadingBuilder: (ctx, child, p) => p == null ? child : const SizedBox(height: 50),
-                  errorBuilder: (ctx, err, st) => const Icon(Icons.folder, size: 50, color: Colors.orange),
+                  loadingBuilder: (ctx, child, p) =>
+                  p == null
+                      ? child
+                      : const SizedBox(height: 50),
+                  errorBuilder: (ctx, err, st) =>
+                  const Icon(Icons.folder, size: 50, color: Colors.orange),
                 ),
                 const SizedBox(height: 8),
-                // Nome Categoria
                 Text(
                   cat['name']!,
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold, fontSize: 14),
                   textAlign: TextAlign.center,
                 ),
               ],
@@ -303,10 +404,7 @@ class _ChatPageState extends State<ChatPage> {
         final pic = _currentSymbols[index];
         return GestureDetector(
           onTap: () {
-            // AGGIUNGE AL MESSAGGIO
-            setState(() {
-              _composingMessage.add({'url': pic['url']!, 'desc': pic['desc']!});
-            });
+            _aggiungiPittogramma(pic['url']!, pic['desc']!);
             // NON chiudiamo il pannello, così può aggiungerne altri
           },
           child: Container(
@@ -325,7 +423,8 @@ class _ChatPageState extends State<ChatPage> {
                 ),
                 Text(
                   pic['desc']!,
-                  style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                      fontSize: 10, fontWeight: FontWeight.bold),
                   textAlign: TextAlign.center,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -349,7 +448,10 @@ class _ChatPageState extends State<ChatPage> {
     return Align(
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
-        constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.8),
+        constraints: BoxConstraints(maxWidth: MediaQuery
+            .of(context)
+            .size
+            .width * 0.8),
         margin: const EdgeInsets.symmetric(vertical: 8),
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
@@ -362,12 +464,18 @@ class _ChatPageState extends State<ChatPage> {
           alignment: WrapAlignment.start,
           children: pictograms.map((pic) {
             // Calcolo larghezza per averne max 3 per riga (togliendo i margini)
-            double itemWidth = (MediaQuery.of(context).size.width * 0.7) / 3 - 12;
+            double itemWidth = (MediaQuery
+                .of(context)
+                .size
+                .width * 0.7) / 3 - 12;
             return Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Image.network(pic['imageUrl'], width: itemWidth, height: itemWidth, fit: BoxFit.contain),
-                Text(pic['description'] ?? '', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                Image.network(pic['imageUrl'], width: itemWidth,
+                    height: itemWidth,
+                    fit: BoxFit.contain),
+                Text(pic['description'] ?? '', style: const TextStyle(
+                    fontSize: 12, fontWeight: FontWeight.bold)),
               ],
             );
           }).toList(),
@@ -388,20 +496,24 @@ class _ChatPageState extends State<ChatPage> {
           height: 36,
           child: ElevatedButton.icon(
             style: ElevatedButton.styleFrom(
-              backgroundColor: _isPickerVisible ? Colors.grey.shade400 : Colors.deepPurple,
+              backgroundColor: _isPickerVisible ? Colors.grey.shade400 : Colors
+                  .deepPurple,
               foregroundColor: Colors.white,
               elevation: 0,
               // MODIFICA QUI: Aumentato a 30 per renderlo completamente arrotondato
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(30)),
               padding: EdgeInsets.zero,
             ),
             icon: Icon(
-              _isPickerVisible ? Icons.keyboard_arrow_down : Icons.grid_view_rounded,
-              size: 20
+                _isPickerVisible ? Icons.keyboard_arrow_down : Icons
+                    .grid_view_rounded,
+                size: 20
             ),
             label: Text(
-              _isPickerVisible ? "Nascondi" : "Apri Simboli",
-              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)
+                _isPickerVisible ? "Nascondi" : "Apri Simboli",
+                style: const TextStyle(
+                    fontSize: 14, fontWeight: FontWeight.w600)
             ),
             onPressed: () {
               setState(() {
@@ -414,6 +526,29 @@ class _ChatPageState extends State<ChatPage> {
       ),
     );
   }
+
+  //BUILDER PER I SUGGERIMENTI
+  Widget _buildSuggerimenti() {
+    if (_composingMessage.isEmpty) return SizedBox.shrink();
+
+    String ultimoURL = _composingMessage.last['url']!;
+    String ultimoId = ultimoURL
+        .split('/')
+        .last;
+    List<dynamic> suggerimenti = GestoreJson().suggerimentiDiImmagine(ultimoId);
+    List<String> listaUrl = List<String>.from(suggerimenti);
+
+    //nascondiamo la barra suggerunebtu se non ci sono
+    if (suggerimenti.isEmpty) return SizedBox.shrink();
+
+    return Suggerimenti(
+      dati: listaUrl,
+      selezionato: (urlCliccato) {
+        _aggiungiPittogramma(urlCliccato, "");
+      },
+    );
+  }
+
 
   //CREDO SI POSSA RIMUOVERE, ERA IL SELETTORE DI PITTOGRAMMI CHE
   //SI CHIUDEVA DOPO L'INSERIMENTO DI OGNI SINGOLO PITTOGRAMMA
@@ -572,18 +707,21 @@ class _ChatPageState extends State<ChatPage> {
                             width: 90,
                             margin: const EdgeInsets.symmetric(horizontal: 6),
                             decoration: BoxDecoration(
-                              border: Border.all(color: Colors.deepPurple.shade100),
+                              border: Border.all(
+                                  color: Colors.deepPurple.shade100),
                               borderRadius: BorderRadius.circular(12),
                               color: Colors.grey.shade50,
                             ),
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Image.network(pic['url']!, height: 60, width: 60),
+                                Image.network(
+                                    pic['url']!, height: 60, width: 60),
                                 const SizedBox(height: 4),
                                 Text(
                                   pic['desc']!,
-                                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                                  style: const TextStyle(fontSize: 12,
+                                      fontWeight: FontWeight.bold),
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               ],
@@ -594,13 +732,16 @@ class _ChatPageState extends State<ChatPage> {
                             right: 0,
                             top: 0,
                             child: GestureDetector(
-                              onTap: () => setState(() => _composingMessage.removeAt(index)),
+                              onTap: () =>
+                                  setState(() =>
+                                  _composingMessage.removeAt(index)),
                               child: Container(
                                 decoration: const BoxDecoration(
                                   color: Colors.red,
                                   shape: BoxShape.circle,
                                 ),
-                                child: const Icon(Icons.close, size: 18, color: Colors.white),
+                                child: const Icon(
+                                    Icons.close, size: 18, color: Colors.white),
                               ),
                             ),
                           ),
@@ -632,7 +773,8 @@ class _ChatPageState extends State<ChatPage> {
     if (_composingMessage.isEmpty) return;
 
     // Prepariamo i dati per il DB
-    List<Map<String, String>> messageData = _composingMessage.map((p) => {
+    List<Map<String, String>> messageData = _composingMessage.map((p) =>
+    {
       'imageUrl': p['url']!,
       'description': p['desc']!,
     }).toList();
@@ -650,4 +792,37 @@ class _ChatPageState extends State<ChatPage> {
       _isPickerVisible = false; // Per chiudere dopo l'invio
     });
   }
+
+  Future<void> _loadUserPermissions() async {
+    try {
+      // 1. Leggi il documento dell'utente attuale
+      final userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(_auth.currentUser!.uid)
+          .get();
+
+      if (userDoc.exists && mounted) {
+        // 2. Prendi la lista dei permessi (se esiste)
+        // Se il campo 'enabledCategories' è null (utenti vecchi), mostriamo tutto per sicurezza.
+        List<dynamic>? allowedNames = userDoc.data()?['enabledCategories'];
+
+        setState(() {
+          if (allowedNames == null) {
+            // Caso: Il campo non esiste -> Mostra TUTTO
+            _visibleCategories = List.from(_categories);
+          } else {
+            // Caso: Il campo esiste -> Filtra solo quelli presenti nella lista
+            _visibleCategories = _categories.where((cat) {
+              return allowedNames.contains(cat['name']);
+            }).toList();
+          }
+        });
+      }
+    } catch (e) {
+      print("Errore caricamento permessi: $e");
+      // In caso di errore, nel dubbio mostriamo tutto
+      setState(() => _visibleCategories = List.from(_categories));
+    }
+  }
 }
+

@@ -25,6 +25,7 @@ class _HomepageState extends State<Homepage> {
   void initState() {
     super.initState();
     _checkUserRole();
+    _checkProfiloStatus();
   }
 
   // 1. CONTROLLIAMO IL RUOLO SU FIREBASE
@@ -41,6 +42,35 @@ class _HomepageState extends State<Homepage> {
         });
       }
     }
+  }
+
+  // Ascolta se il tutor elimina o disattiva questo account mentre l'app è aperta
+  void _checkProfiloStatus() {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+
+    FirebaseFirestore.instance
+        .collection('users')
+        .doc(uid)
+        .snapshots() // Ascolta in tempo reale ogni cambiamento
+        .listen((snapshot) async {
+      
+      // CASO A: Il documento è stato ELIMINATO dal database (Tutor ha premuto cestino)
+      if (!snapshot.exists) {
+        await FirebaseAuth.instance.signOut();
+        // L'AuthGate/Wrapper riporterà automaticamente l'utente al Login
+        return;
+      }
+
+      // CASO B: Il documento c'è, ma il campo profiloAttivo è FALSE (Tutor ha spento l'interruttore)
+      // Se il campo non esiste, diamo per scontato sia attivo (true)
+      bool isActive = snapshot.data()?['profiloAttivo'] ?? true;
+      
+      if (!isActive) {
+        // Logout forzato
+        await FirebaseAuth.instance.signOut();
+      }
+    });
   }
 
   @override
@@ -66,7 +96,7 @@ class _HomepageState extends State<Homepage> {
     ];
 
     // --- BLOCCO SOLO PER TUTOR ---
-    if (_userRole == "Tutor") { // <--- IL FILTRO MAGICO
+    if (_userRole == "Tutor") {
       pages.add(const CCNManagePage()); // La pagina dello screenshot (Gestione Utenti)
       navItems.add(
         const BottomNavigationBarItem(
