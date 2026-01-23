@@ -690,7 +690,7 @@ class _ChatPageState extends State<ChatPage> {
 
   ///Builder della barra dei suggerimenti
   Widget _buildSuggerimenti() {
-    ///se non ce nessun messaggio non mostro nulls
+    ///se non ce nessun messaggio non mostro nulla
     if (_composingMessage.isEmpty) return SizedBox.shrink();
 
     ///Ricavo l'id dell'ultimo pittogramma inserito
@@ -707,10 +707,13 @@ class _ChatPageState extends State<ChatPage> {
     ///costruisco la barra dei suggerimenti, passondo la lista degli url
     ///dei pittogrammi da suggerire, e la funzione da eseguire quando si preme sul
     ///pittogramma suggerito con parametro la stringa url del pittogramma schiacciato
+    ///con la ricerca della descrizione
+    ///
     return Suggerimenti(
       dati: listaUrl,
-      selezionato: (urlCliccato) {
-        _aggiungiPittogramma(urlCliccato, "");
+      selezionato: (urlCliccato) async {
+        String descrizione=await PictogramService().getDescrizione(urlCliccato);
+        _aggiungiPittogramma(urlCliccato, descrizione);
       },
     );
   }

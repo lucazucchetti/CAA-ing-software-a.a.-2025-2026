@@ -74,5 +74,51 @@ class PictogramService {
       return [];
     }
   }
+  ///[getDescrizione] Metodo usato per trovare la descrizione di un pittogramma dato il suo URL
+  ///in ingresso necessita dell'url del pittogramma: [url]
+  ///
+  Future<String> getDescrizione(String urlRic) async {
+    try {
+
+      ///Se è stato pasato un url vuoto allora stringa vuota
+      ///
+      if (urlRic.isEmpty) return "";
+
+      ///trovo l'id del singolo pittogramma
+      ///
+      String id = ((urlRic.split('/').last).split("_")).first;
+
+      ///compone l'url di ricerca delle info del pittogramma a partire
+      ///dall'url dell'immagine
+      ///
+      final url=Uri.parse("$_baseUrl/it/$id");
+
+      ///ricerco le info dell'immagine usando la richiesta http
+      ///
+      final response=await http.get(url);
+
+      ///se la risposta della ricerca ha dato ok:200 allora significa
+      ///che ho la descrizione
+      ///
+      if(response.statusCode==200)
+      {
+        ///decodificazione della risposta http
+        ///
+        var datiOttenuti=json.decode(response.body);
+
+        ///ritorno la descrizione
+        ///
+        if (datiOttenuti['keywords'] != null && (datiOttenuti['keywords'] as List).isNotEmpty) {
+          return datiOttenuti['keywords'][0]['keyword'];
+        }
+      }
+    } catch (e) {
+      print("Errore recupero descrizione");
+    }
+    ///se non trovo la descrizione ho ci sono problemi
+    ///impongo come descrizione Sconosciuto
+    ///
+    return "Sconosciuto";
+  }
 
 }
