@@ -93,7 +93,7 @@ class _EditCcnPageState extends State<EditCcnPage> {
                   title: const Text("Profilo Attivo"),
                   subtitle: Text(_isActive ? "L'utente può accedere all'app" : "Accesso bloccato"),
                   value: _isActive,
-                  activeColor: Colors.green,
+                  activeThumbColor: Colors.green,
                   onChanged: (val) => setState(() => _isActive = val),
                 ),
               ),
@@ -115,7 +115,7 @@ class _EditCcnPageState extends State<EditCcnPage> {
                         SwitchListTile(
                           title: Text(cat),
                           value: _categoryStates[cat]!,
-                          activeColor: Colors.deepPurple,
+                          activeThumbColor: Colors.deepPurple,
                           onChanged: (val) {
                             setState(() {
                               _categoryStates[cat] = val;

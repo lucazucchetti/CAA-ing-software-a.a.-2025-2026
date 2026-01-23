@@ -51,8 +51,9 @@ class GestoreJson{
           print("caricato con successo");
 
         }
-        else
+        else {
           print("non trovato");
+        }
       }
       catch (e) {
         print("Error lettura json");

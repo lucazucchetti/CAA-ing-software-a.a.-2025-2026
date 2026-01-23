@@ -38,7 +38,7 @@ class _ChatPageState extends State<ChatPage> {
   double _gridSize = 3.0;
   bool _showLabels = true;
   final FlutterTts flutterTts = FlutterTts();
-  double _ttsSpeed = 0.5; // Velocità normale (0.0 a 1.0)
+  final double _ttsSpeed = 0.5; // Velocità normale (0.0 a 1.0)
   bool _autoReadMessages = true;
   @override
 

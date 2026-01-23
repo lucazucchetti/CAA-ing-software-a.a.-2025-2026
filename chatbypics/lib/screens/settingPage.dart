@@ -1,6 +1,4 @@
-import 'package:chatbypics/screens/ccnManagePage.dart';
 import 'package:chatbypics/services/auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:chatbypics/services/preferences_service.dart';

@@ -1,13 +1,10 @@
 import 'package:chatbypics/screens/authPage.dart';
-import 'package:chatbypics/screens/verifyEmailPage.dart';
-import 'package:chatbypics/services/auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart'; // Importa Firestore
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'package:chatbypics/screens/HomePage.dart';
-import 'package:chatbypics/screens/chatListPage.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -80,8 +77,8 @@ class MyApp extends StatelessWidget {
         ),
         // Colori specifici per i widget in dark mode
         switchTheme: SwitchThemeData(
-          thumbColor: MaterialStateProperty.all(Colors.deepPurpleAccent),
-          trackColor: MaterialStateProperty.all(Colors.grey.shade700),
+          thumbColor: WidgetStateProperty.all(Colors.deepPurpleAccent),
+          trackColor: WidgetStateProperty.all(Colors.grey.shade700),
         ),
       ),
       home: homeWidget,
