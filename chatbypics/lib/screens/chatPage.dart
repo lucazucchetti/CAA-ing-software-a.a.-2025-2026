@@ -1,3 +1,4 @@
+import 'package:chatbypics/screens/eliminazione_messaggio/BannerEliminazione.dart';
 import 'package:chatbypics/screens/suggerimenti/Suggerimenti.dart';
 import 'package:chatbypics/services/chat_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -195,6 +196,61 @@ class _ChatPageState extends State<ChatPage> {
       _composingMessage.add({'url': newURL, 'desc': desc});
     });
   }
+
+  ///[_eliminaMessaggio] funzione privata asincrona che permette l'eliminazione del
+  ///messaggio quando viene selezionato se il messaggio è stato inviato al massimo
+  ///30s fa
+  ///
+  /// richiede [cont] che è il context, [isMe] booleano che rappresenta se
+  /// il messaggio è dell'utente che ha selezionato oppure no
+  /// [messaggioId] stringa che è l'id del messaggio da eliminare
+  /// [timestampMessaggio] è il Timestamp di invio del messaggio
+  ///
+  Future<void> _eliminaMessaggio(BuildContext cont, bool isMe, String messaggioId, Timestamp? timestampMessaggio) async
+  {
+    ///se il messaggio non è mio allora esco
+    if(!isMe) return;
+
+    DateTime dataInvio = timestampMessaggio?.toDate() ?? DateTime.now();
+    DateTime dataDomanda=DateTime.now();
+
+    ///se il messaggio è troppo vecchio allora dico all'utente che non si può eliminare
+    if(dataDomanda.difference(dataInvio).inSeconds>30)
+    {
+      if (cont.mounted) {
+        ScaffoldMessenger.of(cont).showSnackBar(
+          const SnackBar(
+            content: Text("Impossibile eliminare il messaggio, tempo scaduto"),
+            duration: Duration(seconds: 4),
+          ),
+        );
+      }
+
+      return;
+    }
+    bool risp;
+    ///creo il banner di richiesta di eliminazione
+    risp = await BannerEliminazione.mostraBanner(context: cont);
+
+    ///se la risposta è affermativa allora elimino e stampo la SnackBar che avvisa
+    ///l'utente della cancellazione corretta del messaggio
+    if (risp) {
+      try {
+        await ChatService().cancellaMessaggio(widget.chatID, messaggioId);
+        if (cont.mounted) {
+          ScaffoldMessenger.of(cont).showSnackBar(
+            const SnackBar(
+              content: Text("Messaggio eliminato correttamente!"),
+              duration: Duration(seconds: 4),
+            ),
+          );
+        }
+      } catch (e) {
+        print("errore nella cancellazione $e");
+      }
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -520,6 +576,8 @@ class _ChatPageState extends State<ChatPage> {
   Widget _buildMessageItem(DocumentSnapshot doc) {
     Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
     bool isMe = data['senderId'] == _auth.currentUser!.uid;
+    String messaggioId = doc.id;
+    Timestamp? timestampMessaggio = data['timestamp'];
 
     // Recuperiamo la lista di pittogrammi dal documento
     List<dynamic> pictograms = data['pictograms'] ?? [];
@@ -528,6 +586,9 @@ class _ChatPageState extends State<ChatPage> {
     int itemsPerRow = _gridSize.toInt();
     if (itemsPerRow < 1) itemsPerRow = 1;
     return GestureDetector(
+      ///se messaggio premuto a lungo chiede se vuole eliminare il messaggio se è
+      ///stato inviato dall'utente
+      onLongPress: () => _eliminaMessaggio(context, isMe, messaggioId, timestampMessaggio),
       onTap: () {
         _speak(fullSentence); // Quando tocchi, legge la frase
       },

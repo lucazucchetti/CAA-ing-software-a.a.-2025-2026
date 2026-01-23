@@ -1,4 +1,4 @@
-@startuml DiagrammaAttivitaGestionePittogrammi
+@startuml DiagrammaAttivitaGestioneSuggerimentiPittogrammi
 start
 repeat
 repeat
