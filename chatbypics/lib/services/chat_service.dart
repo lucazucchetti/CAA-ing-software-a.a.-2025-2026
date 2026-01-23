@@ -72,4 +72,20 @@ class ChatService {
       return chatDocId;
     }
   }
+
+  ///Classe che permette l'eliminazione di un messaggio da parte di un utente
+  ///l'eliminazione avviene direttamente nel database ed ha validità per tutte
+  ///e due gli utenti
+  ///
+  /// richiede [chatID] id della chat e [messaggioID] id del messaggio da cancellare
+  ///
+  Future<void> cancellaMessaggio(String chatID, String messaggioID) async {
+    try {
+      ///cancellazione effettiva
+      await _firestore.collection('chats').doc(chatID).collection('messages').doc(messaggioID).delete();
+
+    } catch (e) {
+      print("Errore di eliminazione: $e");
+    }
+  }
 }
