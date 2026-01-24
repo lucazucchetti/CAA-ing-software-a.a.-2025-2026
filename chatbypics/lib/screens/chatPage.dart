@@ -1,20 +1,30 @@
 import 'package:chatbypics/screens/eliminazione_messaggio/BannerEliminazione.dart';
 import 'package:chatbypics/screens/suggerimenti/Suggerimenti.dart';
+import 'package:chatbypics/services/SintesiVocale.dart';
 import 'package:chatbypics/services/chat_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import 'package:chatbypics/services/preferences_service.dart';
-import 'package:flutter_tts/flutter_tts.dart';
 
 import 'package:chatbypics/services/pictogram_service.dart';
 import 'package:flutter/services.dart';
 import 'package:chatbypics/services/GestoreJson.dart';
 
 
+///Classe [ChatPage] è la classe che gestisce le singole chat
+///necessita come parametri la [chatId] e il [chatName] per funzionare
+///
 class ChatPage extends StatefulWidget {
+
+  ///[chatID] è l'id della singola chat da mostrare
+  ///passato come parametro nel metodo costruttore
+  ///
   final String chatID;
+  ///[chatName] è il nome della chat da mostrare
+  ///pasato come parametro nel metodo costruttore
+  ///
   final String chatName;
 
 
@@ -30,33 +40,63 @@ class ChatPage extends StatefulWidget {
 
 }
 
+///Classe [_ChatPageState] rappresenta lo stato della pagina chat
+///
 class _ChatPageState extends State<ChatPage> {
+
+
+  ///[_auth] variabile che rappresenta l'istanza del DB utilizzato come Singleton
+  ///usato incorretto
+  ///
   final FirebaseAuth _auth = FirebaseAuth.instance;
-
-  final PreferencesService _prefService = PreferencesService();
-  bool _isPickerVisible = false; // Controlla se la griglia è aperta
+  ///[_composingMessage] Lista di pittogrammi del messaggio da inviare
+  ///
   final List<Map<String, String>> _composingMessage = [];
-  double _gridSize = 3.0;
-  bool _showLabels = true;
-  final FlutterTts flutterTts = FlutterTts();
-  double _ttsSpeed = 0.5; // Velocità normale (0.0 a 1.0)
-  bool _autoReadMessages = true;
-  @override
+  ///[_prefService] Lista di impostazioni di preferenza usati dal utente
+  ///
+  final PreferencesService _prefService = PreferencesService();
 
+  ///[_isPickerVisible] rappresenta se la barra messaggi è visibile o no
+  ///
+  bool _isPickerVisible = false;
+  ///[_gridSize] da fare
+  ///
+  double _gridSize = 3.0;
+  ///[_showLabels] da fare
+  ///
+  bool _showLabels = true;
+
+  ///non usato
+  bool _autoReadMessages = true;
 
   //bool _isPickerVisible = false; //griglia chiusa di default
   //final List<Map<String, String>> _composingMessage = [];
 
-  // STATO PER LA RICERCA / CATEGORIE
+  ///stato per ricerca categorie???
+  ///
   final TextEditingController _searchController = TextEditingController();
+
+  ///[_currentSymbols]Lista di simboli visualizzabili al momento
+  ///
   List<Map<String, String>> _currentSymbols = [
-  ]; // I simboli visualizzati al momento
+  ];
+
+  ///[_isLoading]
+  ///
   bool _isLoading = false;
-  bool _showingCategories = true; // Se true mostra le cartelle, se false i simboli
-  String _currentCategoryName = ""; // Titolo della categoria attuale
+
+  ///[_showingCategories] se true mostra le cartelle se false i simboli
+  ///
+  bool _showingCategories = true;
+
+  ///[_currentCategoryName]Titolo della categoria usata ora
+  String _currentCategoryName = "";
+
+  ///[_visibleCategories] ???
   List<Map<String, String>> _visibleCategories = [];
 
-  //Lista delle categorie con la relativa immagine di copertina
+  ///[_categories] Lista delle categorie presenti
+  ///
   final List<Map<String, String>> _categories = [
     {
       'name': 'Persone',
@@ -109,29 +149,44 @@ class _ChatPageState extends State<ChatPage> {
       'img': 'https://static.arasaac.org/pictograms/32584/32584_300.png'
     },
   ];
+
+
+  ///[initState] Stato iniziale eseguito una volta all'apertura della chat
+  ///
   @override
   void initState() {
+
     super.initState();
+
+    ///scarico le preferenze dela chat
+    ///
     _loadPreferences();
-    _initTts();// scarica le impostazioni appena entri in chat
-    // Carica i permessi appena entri in chat
+
+    ///scarico le impostazioni della sintesi vocale
+    ///
+    SintesiVocale();
+
+    ///carico i permessi
+    ///
     _loadUserPermissions();
 
     ///leggo il file json, carico i dati nella struttura dati
+    ///
     GestoreJson().leggiJson();
   }
-  void _initTts() async {
-    await flutterTts.setLanguage("it-IT"); // Imposta Italiano
-    await flutterTts.setPitch(1.0);
-    var isLanguageAvailable = await flutterTts.isLanguageAvailable("it-IT");
-    if (!isLanguageAvailable) {
-      print("Errore: La lingua italiana non è installata sul dispositivo");
-    }
-  }
+
+  ///[_loadPreferences] metodo che permette il caricamento delle preferenze
+  ///dell'utente nella chat
+  ///
   Future<void> _loadPreferences() async {
+
+    ///salvo l'utente
+    ///
     final user = _auth.currentUser;
     if (user != null) {
-      // Usa il service per ottenere la mappa di preferenze
+
+      ///in base alla lista dei servizi ottengo i servizi per l'utente
+      ///
       var prefs = await _prefService.getUserPreferences(user.uid);
 
       if (mounted) {
@@ -150,23 +205,6 @@ class _ChatPageState extends State<ChatPage> {
       }
     }
   }
-
-  Future<void> _speak(String text) async {
-    if (text.isNotEmpty) {
-      await flutterTts.speak(text);
-    }
-  }
-
-/*
-  @override
-  void initState() {
-    super.initState();
-    // Carica i permessi appena entri in chat
-    _loadUserPermissions();
-    //Leggo i suggerimenti
-    GestoreJson().leggiJson();
-  }
-  */
 
   ///[_aggiungiPittogramma] funzione che permette di aggiornare i suggerimenti
   ///nel file json quando si inserisce un nuovo pittogramma e aggiunge alla barra
@@ -590,7 +628,10 @@ class _ChatPageState extends State<ChatPage> {
       ///stato inviato dall'utente
       onLongPress: () => _eliminaMessaggio(context, isMe, messaggioId, timestampMessaggio),
       onTap: () {
-        _speak(fullSentence); // Quando tocchi, legge la frase
+
+        ///Quando la frase è toccata parla
+        ///
+        SintesiVocale().speak(fullSentence);
       },
       child: Align(
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
