@@ -1,16 +1,23 @@
-import 'package:chatbypics/screens/eliminazione_messaggio/BannerEliminazione.dart';
-import 'package:chatbypics/screens/suggerimenti/Suggerimenti.dart';
+import 'package:chatbypics/screens/chat/CategoriePittogrammi.dart';
+import 'package:chatbypics/screens/chat/ComposizioneMessaggio/ComposizioneMessaggio.dart';
+import 'package:chatbypics/screens/chat/Gestori/GestorePermessi.dart';
+import 'package:chatbypics/screens/chat/EliminazioneMessaggio/BannerEliminazione.dart';
+import 'package:chatbypics/screens/chat/GrigliaDeiSimboli/GrigliaDeiSimboli.dart';
+import 'package:chatbypics/screens/chat/InputArea/InputArea.dart';
+import 'package:chatbypics/screens/chat/suggerimenti/Suggerimenti.dart';
 import 'package:chatbypics/services/SintesiVocale.dart';
 import 'package:chatbypics/services/chat_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
-import 'package:chatbypics/services/preferences_service.dart';
-
 import 'package:chatbypics/services/pictogram_service.dart';
 import 'package:flutter/services.dart';
 import 'package:chatbypics/services/GestoreJson.dart';
+
+import 'chat/Gestori/GestoreRichiestePreferenze.dart';
+import 'chat/GrigliaCategorie/GrigliaCategorie.dart';
+import 'chat/PreferenzeChat.dart';
 
 
 ///Classe [ChatPage] è la classe che gestisce le singole chat
@@ -52,16 +59,11 @@ class _ChatPageState extends State<ChatPage> {
   ///[_composingMessage] Lista di pittogrammi del messaggio da inviare
   ///
   final List<Map<String, String>> _composingMessage = [];
-  ///[_prefService] Lista di impostazioni di preferenza usati dal utente
-  ///
-  final PreferencesService _prefService = PreferencesService();
 
   ///[_isPickerVisible] rappresenta se la barra messaggi è visibile o no
   ///
   bool _isPickerVisible = false;
-  ///[_gridSize] da fare
-  ///
-  double _gridSize = 3.0;
+
   ///[_showLabels] da fare
   ///
   bool _showLabels = true;
@@ -76,7 +78,7 @@ class _ChatPageState extends State<ChatPage> {
   ///
   final TextEditingController _searchController = TextEditingController();
 
-  ///[_currentSymbols]Lista di simboli visualizzabili al momento
+  ///[_currentSymbols]Lista di simboli che devono essere inviati al momento
   ///
   List<Map<String, String>> _currentSymbols = [
   ];
@@ -90,65 +92,25 @@ class _ChatPageState extends State<ChatPage> {
   bool _showingCategories = true;
 
   ///[_currentCategoryName]Titolo della categoria usata ora
+  ///
   String _currentCategoryName = "";
 
-  ///[_visibleCategories] ???
+  ///[_gestorePermessi] Classe che permette la ricerca delle categorie permesse per l'utente
+  ///
+  final GestorePermessi _gestorePermessi=GestorePermessi();
+
+  ///[_visibleCategories] Categorie visibili all'utente
+  ///
   List<Map<String, String>> _visibleCategories = [];
 
-  ///[_categories] Lista delle categorie presenti
+  ///[_gestorePreferenze] oggetto che permette di interfacciarsi al database per impostare
+  ///le preferenze di un determinato utente
   ///
-  final List<Map<String, String>> _categories = [
-    {
-      'name': 'Persone',
-      'term': 'persone',
-      'img': 'https://static.arasaac.org/pictograms/2649/2649_300.png'
-    },
-    {
-      'name': 'Azioni',
-      'term': 'verbi',
-      'img': 'https://static.arasaac.org/pictograms/6873/6873_300.png'
-    },
-    {
-      'name': 'Emozioni',
-      'term': 'emozioni',
-      'img': 'https://static.arasaac.org/pictograms/8582/8582_300.png'
-    },
-    {
-      'name': 'Alimentazione',
-      'term': 'alimenti',
-      'img': 'https://static.arasaac.org/pictograms/2534/2534_300.png'
-    },
-    {
-      'name': 'Luoghi',
-      'term': 'luoghi',
-      'img': 'https://static.arasaac.org/pictograms/32598/32598_300.png'
-    },
-    {
-      'name': 'Scuola',
-      'term': 'scuola',
-      'img': 'https://static.arasaac.org/pictograms/15515/15515_300.png'
-    },
-    {
-      'name': 'Corpo',
-      'term': 'corpo umano',
-      'img': 'https://static.arasaac.org/pictograms/6473/6473_nocolor_500.png'
-    },
-    {
-      'name': 'Vestiti',
-      'term': 'abbigliamento',
-      'img': 'https://static.arasaac.org/pictograms/2613/2613_300.png'
-    },
-    {
-      'name': 'Saluti',
-      'term': 'saluti sociali',
-      'img': 'https://static.arasaac.org/pictograms/2347/2347_300.png'
-    },
-    {
-      'name': 'Aggettivi',
-      'term': 'aggettivi',
-      'img': 'https://static.arasaac.org/pictograms/32584/32584_300.png'
-    },
-  ];
+  final GestoreRichiestePreferenze _gestorePreferenze=GestoreRichiestePreferenze();
+
+  ///[_impostazioni] oggetto che contiene le preferenze della chat del determinato utente
+  ///
+  PreferenzeChat _impostazioni=PreferenzeChat();
 
 
   ///[initState] Stato iniziale eseguito una volta all'apertura della chat
@@ -160,7 +122,7 @@ class _ChatPageState extends State<ChatPage> {
 
     ///scarico le preferenze dela chat
     ///
-    _loadPreferences();
+    _caricaPreferenze();
 
     ///scarico le impostazioni della sintesi vocale
     ///
@@ -168,42 +130,11 @@ class _ChatPageState extends State<ChatPage> {
 
     ///carico i permessi
     ///
-    _loadUserPermissions();
+    _caricaPermessi();
 
     ///leggo il file json, carico i dati nella struttura dati
     ///
     GestoreJson().leggiJson();
-  }
-
-  ///[_loadPreferences] metodo che permette il caricamento delle preferenze
-  ///dell'utente nella chat
-  ///
-  Future<void> _loadPreferences() async {
-
-    ///salvo l'utente
-    ///
-    final user = _auth.currentUser;
-    if (user != null) {
-
-      ///in base alla lista dei servizi ottengo i servizi per l'utente
-      ///
-      var prefs = await _prefService.getUserPreferences(user.uid);
-
-      if (mounted) {
-        setState(() {
-          // Aggiorna le variabili locali se le chiavi esistono
-          if (prefs.containsKey(PreferencesService.keyGridSize)) {
-            _gridSize = (prefs[PreferencesService.keyGridSize] as num).toDouble();
-          }
-          if (prefs.containsKey(PreferencesService.keyAutoRead)) {
-            _autoReadMessages = prefs[PreferencesService.keyAutoRead];
-          }
-          if (prefs.containsKey(PreferencesService.keyShowLabels)) {
-            _showLabels = prefs[PreferencesService.keyShowLabels];
-          }
-        });
-      }
-    }
   }
 
   ///[_aggiungiPittogramma] funzione che permette di aggiornare i suggerimenti
@@ -495,117 +426,24 @@ class _ChatPageState extends State<ChatPage> {
   // --- VISTA 1: GRIGLIA DELLE CATEGORIE ---
   // --- VISTA 1: GRIGLIA DELLE CATEGORIE FILTRATA ---
   Widget _buildCategoriesGrid() {
-    // Se la lista è vuota, potrebbe essere che sta ancora caricando o che l'utente non ha permessi.
-    // Possiamo mostrare un caricamento se _visibleCategories è vuota ma _categories no.
-    if (_visibleCategories.isEmpty) {
-      // Piccolo controllo: se l'utente ha davvero 0 permessi mostriamo "Nessuna categoria"
-      // Per ora assumiamo sia caricamento iniziale
-      // Se vuoi gestire il caso "0 permessi", servirebbe una variabile bool _permissionsLoaded
-      return const Center(child: CircularProgressIndicator());
-    }
 
-    return GridView.builder(
-      padding: const EdgeInsets.all(10),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        crossAxisSpacing: 10,
-        mainAxisSpacing: 10,
-        childAspectRatio: 0.9,
-      ),
-      // USA LA LISTA FILTRATA
-      itemCount: _visibleCategories.length,
-      itemBuilder: (context, index) {
-        // PRENDI L'ELEMENTO DALLA LISTA FILTRATA
-        final cat = _visibleCategories[index];
-
-        return GestureDetector(
-          onTap: () => _selectCategory(cat['name']!, cat['term']!),
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              border: Border.all(color: Colors.deepPurple.shade100, width: 2),
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 4)
-              ],
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Image.network(
-                  cat['img']!,
-                  height: 50,
-                  loadingBuilder: (ctx, child, p) =>
-                  p == null
-                      ? child
-                      : const SizedBox(height: 50),
-                  errorBuilder: (ctx, err, st) =>
-                  const Icon(Icons.folder, size: 50, color: Colors.orange),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  cat['name']!,
-                  style: const TextStyle(
-                      fontWeight: FontWeight.bold, fontSize: 14),
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ),
-          ),
-        );
+    return GrigliaCategorie(
+      visibleCategories: _visibleCategories,
+      selezionato: (nome, termine){
+        _selectCategory(nome,termine);
       },
     );
+
   }
 
   // --- VISTA 2: GRIGLIA DEI SIMBOLI (RISULTATI) ---
   Widget _buildSymbolsGrid() {
-    if (_currentSymbols.isEmpty) {
-      return const Center(child: Text("Nessun simbolo trovato."));
-    }
 
-    return GridView.builder(
-      padding: const EdgeInsets.all(10),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 4, // 4 colonne per i simboli (più piccoli)
-        crossAxisSpacing: 10,
-        mainAxisSpacing: 10,
-      ),
-      itemCount: _currentSymbols.length,
-      itemBuilder: (context, index) {
-        final pic = _currentSymbols[index];
-        return GestureDetector(
-          onTap: () {
-            ///aggiungo il pittogramma selezionato e aggiorno i suggerimenti
-            _aggiungiPittogramma(pic['url']!, pic['desc']!);
-            // NON chiudiamo il pannello, così può aggiungerne altri
-          },
-          child: Container(
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey.shade300),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.all(4.0),
-                    child: Image.network(pic['url']!, fit: BoxFit.contain),
-                  ),
-                ),
-                Text(
-                  pic['desc']!,
-                  style: const TextStyle(
-                      fontSize: 10, fontWeight: FontWeight.bold),
-                  textAlign: TextAlign.center,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ),
-        );
-      },
+    return GrigliaDeiSimboli(
+        simboli: _currentSymbols,
+        selezionato: (url,descrizione){
+          _aggiungiPittogramma(url, descrizione);
+        }
     );
   }
 
@@ -621,7 +459,7 @@ class _ChatPageState extends State<ChatPage> {
     List<dynamic> pictograms = data['pictograms'] ?? [];
 
     String fullSentence = pictograms.map((p) => p['description'] ?? '').join(" ");
-    int itemsPerRow = _gridSize.toInt();
+    int itemsPerRow = _impostazioni.gridSize.toInt();
     if (itemsPerRow < 1) itemsPerRow = 1;
     return GestureDetector(
       ///se messaggio premuto a lungo chiede se vuole eliminare il messaggio se è
@@ -659,7 +497,7 @@ class _ChatPageState extends State<ChatPage> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Image.network(pic['imageUrl'], width: itemWidth, height: itemWidth, fit: BoxFit.contain),
-                if (_showLabels)
+                if (_impostazioni.showLabels)
                 Text(pic['description'] ?? '', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
               ],
             /*  
@@ -686,47 +524,16 @@ class _ChatPageState extends State<ChatPage> {
     );
   }
 
-  // barra inferiore chat
+  ///[_buildInputArea] Barra Inferiore della chat
+  ///
   Widget _buildInputArea() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      color: Colors.white,
-      child: SafeArea(
-        top: false,
-        child: SizedBox(
-          width: double.infinity,
-          height: 36,
-          child: ElevatedButton.icon(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: _isPickerVisible ? Colors.grey.shade400 : Colors
-                  .deepPurple,
-              foregroundColor: Colors.white,
-              elevation: 0,
-              // MODIFICA QUI: Aumentato a 30 per renderlo completamente arrotondato
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(30)),
-              padding: EdgeInsets.zero,
-            ),
-            icon: Icon(
-                _isPickerVisible ? Icons.keyboard_arrow_down : Icons
-                    .grid_view_rounded,
-                size: 20
-            ),
-            label: Text(
-                _isPickerVisible ? "Nascondi" : "Apri Simboli",
-                style: const TextStyle(
-                    fontSize: 14, fontWeight: FontWeight.w600)
-            ),
-            onPressed: () {
-              setState(() {
-                _isPickerVisible = !_isPickerVisible;
-                if (!_isPickerVisible) FocusScope.of(context).unfocus();
-              });
-            },
-          ),
-        ),
-      ),
-    );
+
+    return InputArea(cliccato: (){
+      setState((){
+        _isPickerVisible=!_isPickerVisible;
+        if(!_isPickerVisible) FocusScope.of(context).unfocus();
+      });
+    },isPickerVisible: _isPickerVisible);
   }
 
   ///Builder della barra dei suggerimenti
@@ -760,222 +567,19 @@ class _ChatPageState extends State<ChatPage> {
   }
 
 
-  //CREDO SI POSSA RIMUOVERE, ERA IL SELETTORE DI PITTOGRAMMI CHE
-  //SI CHIUDEVA DOPO L'INSERIMENTO DI OGNI SINGOLO PITTOGRAMMA
-  //COSTRINGENDO L'UTENTE A RIAPRIRE IL SELETTORE PER OGNI PITTOGRAMMA
-  //DA INSERIRE
-  /*
-  // --- LOGICA SELEZIONE PITTOGRAMMI ---
-  void _showPictogramSelector() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        padding: const EdgeInsets.all(16),
-        height: 400,
-        child: Column(
-          children: [
-            const Text("Scegli un concetto", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 15),
-            Expanded(
-              child: GridView.builder(
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 3,
-                  crossAxisSpacing: 15,
-                  mainAxisSpacing: 15,
-                ),
-                itemCount: _samplePictograms.length,
-                itemBuilder: (context, index) {
-                  final pic = _samplePictograms[index];
-                  return GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          // AGGIUNGI ALLA LISTA INVECE DI INVIARE SUBITO
-                          _composingMessage.add({'url': pic['url']!, 'desc': pic['desc']!});
-                        });
-                        Navigator.pop(context);
-                      },
-
-                    child: Container(
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey.shade300),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Image.network(pic['url']!, height: 60),
-                          Text(pic['desc']!, style: const TextStyle(fontWeight: FontWeight.bold)),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-*/
-  /*
-  Widget _buildPersistentPicker() {
-    return Container(
-      height: 250,
-      color: Colors.white,
-      child: Column(
-        children: [
-          // Barra superiore del selettore con tasto chiudi
-          Container(
-            color: Colors.grey[200],
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Padding(
-                  padding: EdgeInsets.only(left: 16),
-                  child: Text("Seleziona simboli", style: TextStyle(fontWeight: FontWeight.bold)),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.close),
-                  onPressed: () => setState(() => _isPickerVisible = false),
-                ),
-              ],
-            ),
-          ),
-          // Griglia pittogrammi
-          Expanded(
-            child: GridView.builder(
-              padding: const EdgeInsets.all(10),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 4,
-                crossAxisSpacing: 10,
-                mainAxisSpacing: 10,
-              ),
-              itemCount: _samplePictograms.length,
-              itemBuilder: (context, index) {
-                final pic = _samplePictograms[index];
-                return GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      _composingMessage.add({'url': pic['url']!, 'desc': pic['desc']!});
-                    });
-                    // Nessun Navigator.pop quindi La finestra resta aperta.
-                  },
-                  child: Container(
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey.shade300),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Image.network(pic['url']!, height: 40),
-                        Text(pic['desc']!, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
-                      ],
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-  */
 
   // --- ANTEPRIMA MESSAGGIO IN COMPOSIZIONE ---
   Widget _buildComposerPreview() {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: Colors.grey.shade300)),
-        boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 4)],
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          SizedBox(
-            height: 110,
-            child: Row(
-              children: [
-                Expanded(
-                  child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: _composingMessage.length,
-                    itemBuilder: (context, index) {
-                      final pic = _composingMessage[index];
-                      return Stack(
-                        children: [
-                          Container(
-                            width: 90,
-                            margin: const EdgeInsets.symmetric(horizontal: 6),
-                            decoration: BoxDecoration(
-                              border: Border.all(
-                                  color: Colors.deepPurple.shade100),
-                              borderRadius: BorderRadius.circular(12),
-                              color: Colors.grey.shade50,
-                            ),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Image.network(
-                                    pic['url']!, height: 60, width: 60),
-                                const SizedBox(height: 4),
-                                Text(
-                                  pic['desc']!,
-                                  style: const TextStyle(fontSize: 12,
-                                      fontWeight: FontWeight.bold),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ],
-                            ),
-                          ),
-                          // Bottone per rimuovere il singolo pittogramma
-                          Positioned(
-                            right: 0,
-                            top: 0,
-                            child: GestureDetector(
-                              onTap: () =>
-                                  setState(() =>
-                                  _composingMessage.removeAt(index)),
-                              child: Container(
-                                decoration: const BoxDecoration(
-                                  color: Colors.red,
-                                  shape: BoxShape.circle,
-                                ),
-                                child: const Icon(
-                                    Icons.close, size: 18, color: Colors.white),
-                              ),
-                            ),
-                          ),
-                        ],
-                      );
-                    },
-                  ),
-                ),
-                // Tasto INVIO
-                Padding(
-                  padding: const EdgeInsets.only(left: 8.0),
-                  child: FloatingActionButton(
-                    mini: false,
-                    backgroundColor: Colors.deepPurple,
-                    onPressed: _handleSendMessage,
-                    child: const Icon(Icons.send, color: Colors.white),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
+    
+    return ComposizioneMessaggio(
+        composingMessage: _composingMessage,
+        invio: _handleSendMessage,
+        rimozione:(posizioneDaEliminare){
+          setState((){
+            _composingMessage.removeAt(posizioneDaEliminare);
+          });
+        },
+        );
   }
 
   // --- INVIO MESSAGGIO ---
@@ -1003,35 +607,63 @@ class _ChatPageState extends State<ChatPage> {
     });
   }
 
-  Future<void> _loadUserPermissions() async {
-    try {
-      // 1. Leggi il documento dell'utente attuale
-      final userDoc = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(_auth.currentUser!.uid)
-          .get();
+  ///[_caricaPreferenze] metodo per caricare le preferenze di un determinato utente
+  ///nelle impostazioni della chat
+  ///
+  Future<void> _caricaPreferenze() async {
+    final utente=FirebaseAuth.instance.currentUser;
 
-      if (userDoc.exists && mounted) {
-        // 2. Prendi la lista dei permessi (se esiste)
-        // Se il campo 'enabledCategories' è null (utenti vecchi), mostriamo tutto per sicurezza.
-        List<dynamic>? allowedNames = userDoc.data()?['enabledCategories'];
+    PreferenzeChat nuoveImpostazioni;
 
-        setState(() {
-          if (allowedNames == null) {
-            // Caso: Il campo non esiste -> Mostra TUTTO
-            _visibleCategories = List.from(_categories);
-          } else {
-            // Caso: Il campo esiste -> Filtra solo quelli presenti nella lista
-            _visibleCategories = _categories.where((cat) {
-              return allowedNames.contains(cat['name']);
-            }).toList();
-          }
-        });
-      }
-    } catch (e) {
-      print("Errore caricamento permessi: $e");
-      // In caso di errore, nel dubbio mostriamo tutto
-      setState(() => _visibleCategories = List.from(_categories));
+    ///Se l'utente è null allora non fa nulla e tiene le impostazioni standard
+    ///
+    if(utente==null) return;
+
+    ///Chiedo le impostazioni usando il gestore Preferenze
+    ///
+    nuoveImpostazioni = await _gestorePreferenze.caricaPreferenze(utente.uid);
+
+    if (mounted) {
+      setState((){
+        ///imposto le preferenze trovate
+        _impostazioni=nuoveImpostazioni;
+      });
+    }
+  }
+
+  ///[_caricaPermessi] metodo che permette di caricare per un determinato
+  ///utente i permessi di utilizzo di determinate categorie di pittogrammi
+  ///
+  Future<void> _caricaPermessi() async {
+
+    ///trova l'utente se non esiste allora esci dalla funzione e mantieni
+    ///la lista vuota
+    ///
+    final utente=FirebaseAuth.instance.currentUser;
+    if(utente==null)    return;
+
+    ///trova quali sono le categorie permesse per l'utente
+    ///
+    List<String> pittogrammiOk=await _gestorePermessi.recuperaCategorie(utente.uid);
+
+
+    ///se la pagina è attiva allora aggiorno i permessi dell'utente se ci sono
+    ///altrimenti gli mostro tutto
+    ///
+    if(mounted)
+    {
+
+      setState((){
+        if(pittogrammiOk.isNotEmpty) {
+
+          _visibleCategories=CategoriePittogrammi.categories.where((cat){
+            return pittogrammiOk.contains(cat['name']);}).toList();
+
+        }
+        else _visibleCategories=List.from(CategoriePittogrammi.categories);
+
+      });
+
     }
   }
 }

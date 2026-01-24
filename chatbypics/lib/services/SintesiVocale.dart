@@ -1,8 +1,7 @@
 import 'package:flutter_tts/flutter_tts.dart';
 
-
 ///[SintesiVocale] classe che implementa la logica della sintesi vocale
-///usa il pattern design Singleton e usa anche il Pattern Delegation
+///usa il pattern design Singleton e usa anche il pattern Delegation
 ///per l'utilizzo della sintesi vocale con la classe FlutterTts()
 ///
 class SintesiVocale{
@@ -63,7 +62,7 @@ class SintesiVocale{
     ///imposta il tono della sintesi e la velocità
     ///
     await _sint.setPitch(1.0);
-    await _sint.setSpeechRate(1);
+    await _sint.setSpeechRate(0.3);
 
     ///controlla se è possibile impostare la lingua italiana
     ///

@@ -1,5 +1,5 @@
-import 'package:chatbypics/screens/suggerimenti/SingoloSuggerimento.dart';
-import 'package:chatbypics/screens/suggerimenti/stileSuggerimenti/StileSuggerimenti.dart';
+import 'package:chatbypics/screens/chat/suggerimenti/SingoloSuggerimento.dart';
+import 'package:chatbypics/screens/chat/suggerimenti/stileSuggerimenti/StileSuggerimenti.dart';
 import 'package:flutter/material.dart';
 
 ///Classe che implementa la barra dei suggerimenti

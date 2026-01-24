@@ -1,4 +1,4 @@
-import 'package:chatbypics/screens/suggerimenti/stileSuggerimenti/StileSingoloSuggerimento.dart';
+import 'package:chatbypics/screens/chat/suggerimenti/stileSuggerimenti/StileSingoloSuggerimento.dart';
 import 'package:flutter/material.dart';
 
 ///Classe che implementa il singolo suggerimento andando a stampare il singolo
@@ -32,6 +32,7 @@ class SingoloSuggerimento extends StatelessWidget {
           child: Padding(
             padding: StileSingoloSuggerimento.paddingDellImm,
             child: Image.network(url, fit: StileSingoloSuggerimento.espansioneImm),
+
           ),
         ),
       ),
