@@ -9,7 +9,7 @@ class NewChatPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final currentUid = FirebaseAuth.instance.currentUser?.uid;
+    final currentUid = FirebaseAuth.instance.currentUser!.uid;
 
     return Scaffold(
       appBar: AppBar(title: const Text("Seleziona Utente")),
@@ -58,7 +58,7 @@ class NewChatPage extends StatelessWidget {
                       Navigator.pushReplacement(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => ChatPage(chatID: chatId, chatName: name),
+                          builder: (_) => ChatPage(chatID: chatId, chatName: name, scrittura: true,chatOwnerID: currentUid),
                         ),
                       );
                     }

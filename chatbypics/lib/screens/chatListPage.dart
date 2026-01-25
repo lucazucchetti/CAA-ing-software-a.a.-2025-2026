@@ -5,14 +5,23 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class ChatListPage extends StatefulWidget {
-  const ChatListPage({super.key});
+
+  final String? osservatore;
+
+  const ChatListPage({
+    super.key,
+    this.osservatore,
+  });
 
   @override
   State<ChatListPage> createState() => _ChatListPageState();
 }
 
 class _ChatListPageState extends State<ChatListPage> {
-  final String currentUserId = FirebaseAuth.instance.currentUser!.uid;
+  late String currentUserId;
+  late bool scrittura;
+
+  //final String currentUserId = FirebaseAuth.instance.currentUser!.uid;
 
   bool _isSearching = false; // Se stiamo cercando o no
   final TextEditingController _searchController = TextEditingController();
@@ -21,6 +30,9 @@ class _ChatListPageState extends State<ChatListPage> {
   @override
   void initState() {
     super.initState();
+    currentUserId = widget.osservatore ?? FirebaseAuth.instance.currentUser!.uid;
+    widget.osservatore==null ? scrittura=true: scrittura=false;
+
     // Ascoltiamo cosa scrive l'utente in tempo reale
     _searchController.addListener(() {
       setState(() {
@@ -156,7 +168,7 @@ class _ChatListPageState extends State<ChatListPage> {
                     Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => ChatPage(chatID: chatId, chatName: friendName),
+                      builder: (_) => ChatPage(chatID: chatId, chatName: friendName, scrittura: scrittura, chatOwnerID: currentUserId),
                     ),
                     );
                   },

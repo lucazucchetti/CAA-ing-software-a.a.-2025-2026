@@ -34,11 +34,17 @@ class ChatPage extends StatefulWidget {
   ///
   final String chatName;
 
+  final bool scrittura;
+
+  final String chatOwnerID;
+
 
   const ChatPage({
     super.key,
     required this.chatID,
     required this.chatName,
+    required this.scrittura,
+    required this.chatOwnerID
   });
 
   @override
@@ -169,8 +175,15 @@ class _ChatPageState extends State<ChatPage> {
   ///
   Future<void> _eliminaMessaggio(BuildContext cont, bool isMe, String messaggioId, Timestamp? timestampMessaggio) async
   {
+
+    if(!widget.scrittura){
+      ScaffoldMessenger.of(cont).showSnackBar(AvvisatoreRisultatoEliminazione().risposta("Modalità lettura",2));
+      return;
+    }
+
     ///se il messaggio non è mio allora esco
     if(!isMe) return;
+
 
     ///calcolo quando è stato inviato il messaggio e quando è stata fatta la richiesta di
     ///eliminazione.
@@ -229,7 +242,8 @@ class _ChatPageState extends State<ChatPage> {
           ),
 
           if (_composingMessage.isNotEmpty) _buildComposerPreview(),
-          _buildInputArea(),
+          ///se ho i permessi di scrittura abilito la possibilità di scrivere
+          if(widget.scrittura) _buildInputArea(),
           ///area suggerimenti, mostrata se _isPickerVisible è attivo
           if (_isPickerVisible) _buildSuggerimenti(),
           // 4. Selettore Pittogrammi Persistente
@@ -403,11 +417,11 @@ class _ChatPageState extends State<ChatPage> {
 
 
   ///[_buildMessageItem] metodo che va a restituire la sezione dei messaggi inviati
-  ///necessita in input il DocumentSnapshit [doc] di riferimento
+  ///necessita in input il DocumentSnapshot [doc] di riferimento
   ///
   Widget _buildMessageItem(DocumentSnapshot doc) {
     Map<String, dynamic> data =doc.data() as Map<String, dynamic>;
-    bool isMe = data['senderId'] == _auth.currentUser!.uid;
+    bool isMe = data['senderId']==widget.chatOwnerID;
     String messaggioId=doc.id;
     Timestamp? timestampMessaggio=data['timestamp'];
 

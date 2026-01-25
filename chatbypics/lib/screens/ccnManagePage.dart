@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:chatbypics/screens/addCcnPage.dart';
+import 'package:chatbypics/screens/chatListPage.dart';
 
 class CCNManagePage extends StatefulWidget {
   const CCNManagePage({super.key});
@@ -128,8 +129,13 @@ class _CCNManagePageState extends State<CCNManagePage> {
                       IconButton(
                         icon: const Icon(Icons.visibility_sharp, color: Colors.blue),
                         onPressed: () {
-
-                        },
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => ChatListPage(osservatore: docId),
+                            ),
+                          );
+                          },
                       ),
                     ],
                   ),
