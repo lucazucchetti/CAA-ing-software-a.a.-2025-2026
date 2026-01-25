@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 
+///[GrigliaDeiSimboli] classe che permette la costruzione della palette di scelta dei pittogrammi
+///di una determinata categoria
+///
 class GrigliaDeiSimboli extends StatelessWidget {
 
+  ///[simboli] la lista dei simboli da mostrare
   final List<Map<String, String>> simboli;
 
-  /// Funzione da chiamare al click: passa (url, descrizione)
+  /// Funzione da chiamare al click del pittogramma: passa il  pittogramma stesso(url, descrizione)
   final Function(String, String) selezionato;
 
   const GrigliaDeiSimboli({
@@ -22,7 +26,7 @@ class GrigliaDeiSimboli extends StatelessWidget {
     return GridView.builder(
       padding: const EdgeInsets.all(10),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 4, // 4 colonne per i simboli (più piccoli)
+        crossAxisCount: 4,
         crossAxisSpacing: 10,
         mainAxisSpacing: 10,
       ),
@@ -31,6 +35,7 @@ class GrigliaDeiSimboli extends StatelessWidget {
         final pic = simboli[index];
         return GestureDetector(
           onTap: () {
+            ///se pittogramma schiacciato
             ///aggiungo il pittogramma selezionato e aggiorno i suggerimenti
             selezionato(pic['url']!, pic['desc']!);
           },

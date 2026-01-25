@@ -1,7 +1,7 @@
 import 'package:chatbypics/screens/chat/suggerimenti/stileSuggerimenti/StileSingoloSuggerimento.dart';
 import 'package:flutter/material.dart';
 
-///Classe che implementa il singolo suggerimento andando a stampare il singolo
+///Classe [SingoloSuggerimento] che implementa il singolo suggerimento andando a stampare il singolo
 ///pittogramma e permettendogli di aggiornare i suggerimenti e la chat se premuto
 ///
 class SingoloSuggerimento extends StatelessWidget {

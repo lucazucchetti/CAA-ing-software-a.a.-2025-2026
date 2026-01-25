@@ -1,8 +1,8 @@
 import 'package:chatbypics/screens/chat/CategoriePittogrammi.dart';
 import 'package:chatbypics/screens/chat/ComposizioneMessaggio/ComposizioneMessaggio.dart';
+import 'package:chatbypics/screens/chat/EliminazioneMessaggio/AvvisatoreRisultatoEliminazione.dart';
 import 'package:chatbypics/screens/chat/Gestori/GestorePermessi.dart';
 import 'package:chatbypics/screens/chat/EliminazioneMessaggio/BannerEliminazione.dart';
-import 'package:chatbypics/screens/chat/GrigliaDeiSimboli/GrigliaDeiSimboli.dart';
 import 'package:chatbypics/screens/chat/InputArea/InputArea.dart';
 import 'package:chatbypics/screens/chat/suggerimenti/Suggerimenti.dart';
 import 'package:chatbypics/services/SintesiVocale.dart';
@@ -12,16 +12,16 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import 'package:chatbypics/services/pictogram_service.dart';
-import 'package:flutter/services.dart';
 import 'package:chatbypics/services/GestoreJson.dart';
 
 import 'chat/Gestori/GestoreRichiestePreferenze.dart';
-import 'chat/GrigliaCategorie/GrigliaCategorie.dart';
+import 'chat/PersistentPicker/PersistentPicker.dart';
 import 'chat/PreferenzeChat.dart';
+import 'chat/SingoloMessaggio/SingoloMessaggio.dart';
 
 
 ///Classe [ChatPage] è la classe che gestisce le singole chat
-///necessita come parametri la [chatId] e il [chatName] per funzionare
+///necessita come parametri la [chatID] e il [chatName] per funzionare
 ///
 class ChatPage extends StatefulWidget {
 
@@ -44,7 +44,6 @@ class ChatPage extends StatefulWidget {
   @override
   State<ChatPage> createState() => _ChatPageState();
 
-
 }
 
 ///Classe [_ChatPageState] rappresenta lo stato della pagina chat
@@ -52,8 +51,7 @@ class ChatPage extends StatefulWidget {
 class _ChatPageState extends State<ChatPage> {
 
 
-  ///[_auth] variabile che rappresenta l'istanza del DB utilizzato come Singleton
-  ///usato incorretto
+  ///[_auth] variabile che rappresenta l'istanza del DB utilizzato
   ///
   final FirebaseAuth _auth = FirebaseAuth.instance;
   ///[_composingMessage] Lista di pittogrammi del messaggio da inviare
@@ -64,26 +62,17 @@ class _ChatPageState extends State<ChatPage> {
   ///
   bool _isPickerVisible = false;
 
-  ///[_showLabels] da fare
-  ///
-  bool _showLabels = true;
-
-  ///non usato
-  bool _autoReadMessages = true;
-
-  //bool _isPickerVisible = false; //griglia chiusa di default
-  //final List<Map<String, String>> _composingMessage = [];
-
-  ///stato per ricerca categorie???
+  ///[_searchController] rappresenta il testo presente nella barra di
+  ///ricerca dei pittogrammi
   ///
   final TextEditingController _searchController = TextEditingController();
 
-  ///[_currentSymbols]Lista di simboli che devono essere inviati al momento
+  ///[_currentSymbols]Lista di simboli che devono essere mostrati al momento
   ///
-  List<Map<String, String>> _currentSymbols = [
-  ];
+  List<Map<String, String>> _currentSymbols = [];
 
-  ///[_isLoading]
+  ///[_isLoading] variabile utilizzata per indicare se c'è una ricerca in corso
+  ///oppure no per mostrare il caricamento
   ///
   bool _isLoading = false;
 
@@ -95,7 +84,7 @@ class _ChatPageState extends State<ChatPage> {
   ///
   String _currentCategoryName = "";
 
-  ///[_gestorePermessi] Classe che permette la ricerca delle categorie permesse per l'utente
+  ///[_gestorePermessi] oggetto che permette la ricerca delle categorie permesse per l'utente
   ///
   final GestorePermessi _gestorePermessi=GestorePermessi();
 
@@ -113,6 +102,7 @@ class _ChatPageState extends State<ChatPage> {
   PreferenzeChat _impostazioni=PreferenzeChat();
 
 
+
   ///[initState] Stato iniziale eseguito una volta all'apertura della chat
   ///
   @override
@@ -124,11 +114,13 @@ class _ChatPageState extends State<ChatPage> {
     ///
     _caricaPreferenze();
 
-    ///scarico le impostazioni della sintesi vocale
+    ///scarico le impostazioni della sintesi vocale,
+    ///essendo un Singleton vado a creare l'oggetto in modo
+    ///da accellerare il suo funzionamento
     ///
     SintesiVocale();
 
-    ///carico i permessi
+    ///carico i permessi utente
     ///
     _caricaPermessi();
 
@@ -153,15 +145,15 @@ class _ChatPageState extends State<ChatPage> {
   ///
   /// __parametri String newURL: url del pittogramma nuovo inserito, String desc, descrizione del pittogramma__
   ///
-  void _aggiungiPittogramma(String newURL, String desc) {
-    if (_composingMessage.isNotEmpty) {
-      String oldURL = _composingMessage.last['url']!;
-      String oldId = oldURL.split('/').last;
+  void _aggiungiPittogramma(String newURL,String desc) {
+    if(_composingMessage.isNotEmpty){
+      String oldURL=_composingMessage.last['url']!;
+      String oldId=oldURL.split('/').last;
 
-      GestoreJson().aggiornamentoSuggerimenti(oldId, newURL);
+      GestoreJson().aggiornamentoSuggerimenti(oldId,newURL);
     }
 
-    setState(() {
+    setState((){
       _composingMessage.add({'url': newURL, 'desc': desc});
     });
   }
@@ -180,18 +172,19 @@ class _ChatPageState extends State<ChatPage> {
     ///se il messaggio non è mio allora esco
     if(!isMe) return;
 
-    DateTime dataInvio = timestampMessaggio?.toDate() ?? DateTime.now();
+    ///calcolo quando è stato inviato il messaggio e quando è stata fatta la richiesta di
+    ///eliminazione.
+    ///se non ho il timestamp di invio ancora allora lo imposto ad ora
+    ///
+    DateTime dataInvio=timestampMessaggio?.toDate() ?? DateTime.now();
     DateTime dataDomanda=DateTime.now();
 
     ///se il messaggio è troppo vecchio allora dico all'utente che non si può eliminare
     if(dataDomanda.difference(dataInvio).inSeconds>30)
     {
-      if (cont.mounted) {
+      if(cont.mounted){
         ScaffoldMessenger.of(cont).showSnackBar(
-          const SnackBar(
-            content: Text("Impossibile eliminare il messaggio, tempo scaduto"),
-            duration: Duration(seconds: 4),
-          ),
+          AvvisatoreRisultatoEliminazione().risposta("Impossibile eliminare il messaggio, tempo scaduto",3)
         );
       }
 
@@ -199,28 +192,27 @@ class _ChatPageState extends State<ChatPage> {
     }
     bool risp;
     ///creo il banner di richiesta di eliminazione
-    risp = await BannerEliminazione.mostraBanner(context: cont);
+    risp=await BannerEliminazione.mostraBanner(context: cont);
 
     ///se la risposta è affermativa allora elimino e stampo la SnackBar che avvisa
     ///l'utente della cancellazione corretta del messaggio
-    if (risp) {
+    if (risp){
       try {
         await ChatService().cancellaMessaggio(widget.chatID, messaggioId);
-        if (cont.mounted) {
+        if (cont.mounted){
           ScaffoldMessenger.of(cont).showSnackBar(
-            const SnackBar(
-              content: Text("Messaggio eliminato correttamente!"),
-              duration: Duration(seconds: 4),
-            ),
+              AvvisatoreRisultatoEliminazione().risposta("Messaggio eliminato!",3)
           );
         }
-      } catch (e) {
+      }
+      catch(e){
         print("errore nella cancellazione $e");
       }
     }
   }
 
-
+  ///[build] metodo build principale che crea tutto
+  ///
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -232,39 +224,9 @@ class _ChatPageState extends State<ChatPage> {
       body: Column(
         children: [
           Expanded(
-            child: StreamBuilder<QuerySnapshot>(
-              stream: FirebaseFirestore.instance
-                  .collection('chats')
-                  .doc(widget.chatID)
-                  .collection('messages')
-                  .orderBy('timestamp', descending: true)
-                  .snapshots(),
-              builder: (context, snapshot) {
-                if (!snapshot.hasData) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-
-                var messages = snapshot.data!.docs;
-
-                // Se non ci sono messaggi, mostra un avviso
-                if (messages.isEmpty) {
-                  return const Center(
-                      child: Text("Inizia a comunicare con i pittogrammi!"));
-                }
-
-                return ListView.builder(
-                  reverse: true,
-                  itemCount: messages.length,
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 10, vertical: 20),
-                  itemBuilder: (context, index) {
-                    return _buildMessageItem(messages[index]);
-                  },
-                );
-              },
-            ),
+            ///mostra i messaggi
+            child: _streamBuilder()
           ),
-
 
           if (_composingMessage.isNotEmpty) _buildComposerPreview(),
           _buildInputArea(),
@@ -277,277 +239,234 @@ class _ChatPageState extends State<ChatPage> {
     );
   }
 
+  ///[_streamBuilder] metodo che restituisce i messaggi dell'utente
+  ///
+  Widget _streamBuilder() {
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('chats')
+          .doc(widget.chatID)
+          .collection('messages')
+          .orderBy('timestamp', descending: true)
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return const Center(child: CircularProgressIndicator());
+        }
 
-  // widget ocn messaggio e pittogrammi
+        var messages = snapshot.data!.docs;
 
-  // --- LOGICA DI NAVIGAZIONE E RICERCA ---
+        // Se non ci sono messaggi, mostra un avviso
+        if (messages.isEmpty) {
+          return const Center(
+              child: Text("Inizia a comunicare con i pittogrammi!"));
+        }
 
-  // 1. Quando si clicca una categoria
-  void _selectCategory(String name, String term) async {
-    setState(() {
-      _isLoading = true;
-      _showingCategories = false; // Nascondi cartelle, mostra simboli
-      _currentCategoryName = name;
-      _searchController.clear(); // Pulisce la ricerca testuale se c'era
+        return ListView.builder(
+          reverse: true,
+          itemCount: messages.length,
+          padding: const EdgeInsets.symmetric(
+              horizontal: 10, vertical: 20),
+          itemBuilder: (context, index) {
+            return _buildMessageItem(messages[index]);
+          },
+        );
+      },
+    );
+  }
+
+
+  ///[_selectCategory] metodo che permette di andare a cambiare la schermata dei
+  ///pittogrammi quando si seleziona una categoria.
+  ///in ingresso si ha [name] ossia il nome della categoria da mostrare e
+  ///[term] ossia il di ricerca effettivo della categoria per le API Arasaac
+  ///
+  void _selectCategory(String name,String term) async{
+
+    ///viene mostrata la schermata di caricamento e mostro i pittogrammi, imposta
+    ///la catrgoria selezionata e cancella eventuale testo di ricerca pittogrammi
+    ///
+    setState((){
+      _isLoading=true;
+      _showingCategories=false;
+      _currentCategoryName=name;
+      _searchController.clear();
     });
 
-    // Cerca su ARASAAC usando il termine della categoria
-    try {
-      var results = await PictogramService().searchPictograms(term);
-      setState(() {
-        _currentSymbols = results;
-        _isLoading = false;
+    try{
+
+      ///avviene la ricerca dei pittogrammi
+      ///
+      var results=await PictogramService().searchPictograms(term);
+
+      ///visto che ora ha i pittogrammi smette di mostrare il caricamento e
+      ///mostra i risultati
+      ///
+      setState((){
+        _currentSymbols=results;
+        _isLoading=false;
       });
-    } catch (e) {
+    }
+    catch (e){
       print("Errore: $e");
-      setState(() => _isLoading = false);
+      setState(()=>_isLoading=false);
     }
   }
 
-  // 2. Quando si cerca col testo
-  void _performTextSearch() async {
-    String query = _searchController.text.trim();
-    if (query.isEmpty) return;
+  ///[_performTextSearch] metodo utilizzatio per far avvenire la
+  ///ricerca di un pittogramma tramite testo
+  ///
+  void _performTextSearch() async{
 
-    setState(() {
+    ///creo la query in base al testo presente nel searchController e lo
+    ///pulisco dagli spazi vuoti
+    ///
+    String query=_searchController.text.trim();
+
+    ///ne non c'è nulla ritorno vuoto
+    if (query.isEmpty)  return;
+
+    ///se c'è qualcosa nella barra di ricerca allora vado
+    ///a modificare ciò che deve essere mostrato all'utente
+    ///
+    setState((){
       _isLoading = true;
-      _showingCategories = false; // Passa alla vista simboli
+      _showingCategories = false;
       _currentCategoryName = "Ricerca: $query";
     });
 
     try {
-      var results = await PictogramService().searchPictograms(query);
-      setState(() {
-        _currentSymbols = results;
-        _isLoading = false;
+      ///effettuo la ricerca
+      ///
+      var results=await PictogramService().searchPictograms(query);
+      ///se la ricerca ha esito positivo mostra i siboli
+      ///
+      setState((){
+        _currentSymbols=results;
+        _isLoading =false;
       });
-    } catch (e) {
+    }
+    catch (e){
+      ///se la ricerca ha dato esito negativo allora smetto di mostrare la
+      ///rotella di attesa
+      ///
       setState(() => _isLoading = false);
     }
   }
 
-  // 3. Tornare alla vista Categorie
-  void _backToCategories() {
-    setState(() {
+  ///[_backToCategories] metodo utilizzato per tornare alla schermata
+  ///di visualizzazione delle categorie
+  ///
+  void _backToCategories(){
+
+    setState((){
       _showingCategories = true;
       _currentSymbols = [];
       _searchController.clear();
       _currentCategoryName = "";
-      // Chiudi la tastiera del telefono
+
       FocusScope.of(context).unfocus();
     });
+
   }
 
-  // --- UI DEL SELETTORE ---
-  Widget _buildPersistentPicker() {
-    return Container(
-      height: 350, // Altezza fissa del pannello
-      color: Colors.white,
-      child: Column(
-        children: [
-          // A. BARRA SUPERIORE (Ricerca + Navigazione)
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade100,
-              border: Border(bottom: BorderSide(color: Colors.grey.shade300)),
-            ),
-            child: Row(
-              children: [
-                // Tasto Indietro (visibile solo se non siamo nelle categorie)
-                if (!_showingCategories)
-                  IconButton(
-                    icon: const Icon(
-                        Icons.arrow_back, color: Colors.deepPurple),
-                    onPressed: _backToCategories,
-                  ),
+  ///[_buildPersistentPicker] metodo che costruisce e restituisce il PersistentPicker ossio
+  ///la senzione della chat apposita per la ricerca e la visualizzazione dei
+  ///pittogrammi
+  ///
+  Widget _buildPersistentPicker(){
 
-                // Barra di ricerca
-                Expanded(
-                  child: TextField(
-                    controller: _searchController,
-                    decoration: InputDecoration(
-                      hintText: "Cerca simbolo...",
-                      isDense: true,
-                      contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 10),
-                      border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(20),
-                          borderSide: BorderSide.none),
-                      filled: true,
-                      fillColor: Colors.white,
-                      prefixIcon: const Icon(Icons.search, size: 20),
-                    ),
-                    onSubmitted: (_) => _performTextSearch(),
-                  ),
-                ),
-
-                // Tasto Cerca (se si scrive a mano)
-                IconButton(
-                  icon: const Icon(Icons.search, color: Colors.deepPurple),
-                  onPressed: _performTextSearch,
-                ),
-
-                // Tasto Chiudi Tutto
-                IconButton(
-                  icon: const Icon(Icons.close, color: Colors.grey),
-                  onPressed: () => setState(() => _isPickerVisible = false),
-                ),
-              ],
-            ),
-          ),
-
-          // B. TITOLO CATEGORIA CORRENTE (Opzionale)
-          if (!_showingCategories && !_isLoading)
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 16),
-              color: Colors.deepPurple.shade50,
-              child: Text(
-                _currentCategoryName,
-                style: TextStyle(fontWeight: FontWeight.bold,
-                    color: Colors.deepPurple.shade900),
-              ),
-            ),
-
-          // C. CONTENUTO PRINCIPALE (Grid Categorie O Grid Simboli)
-          Expanded(
-            child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : _showingCategories
-                ? _buildCategoriesGrid() // Mostra le cartelle
-                : _buildSymbolsGrid(), // Mostra i pittogrammi
-          ),
-        ],
-      ),
-    );
-  }
-
-  // --- VISTA 1: GRIGLIA DELLE CATEGORIE ---
-  // --- VISTA 1: GRIGLIA DELLE CATEGORIE FILTRATA ---
-  Widget _buildCategoriesGrid() {
-
-    return GrigliaCategorie(
+    ///creazione del PersistenPicker
+    return PersistentPicker(
+      mostraCategorie: _showingCategories,
+      isLoading: _isLoading,
+      currentCategoryName: _currentCategoryName,
+      searchController: _searchController,
       visibleCategories: _visibleCategories,
-      selezionato: (nome, termine){
+      currentSymbols: _currentSymbols,
+
+      vaiACategorie: _backToCategories,
+      ricerca: _performTextSearch,
+
+
+      chiudi: ()=>setState(()=>_isPickerVisible=false),
+
+      clickCategorie: (nome,termine){
         _selectCategory(nome,termine);
       },
-    );
 
-  }
-
-  // --- VISTA 2: GRIGLIA DEI SIMBOLI (RISULTATI) ---
-  Widget _buildSymbolsGrid() {
-
-    return GrigliaDeiSimboli(
-        simboli: _currentSymbols,
-        selezionato: (url,descrizione){
-          _aggiungiPittogramma(url, descrizione);
-        }
+      clickPittogramma: (url,descrizione){
+        _aggiungiPittogramma(url, descrizione);
+      },
     );
   }
 
-  // --- WIDGET MESSAGGIO (CON GRIGLIA DI PITTOGRAMMI) ---
 
+  ///[_buildMessageItem] metodo che va a restituire la sezione dei messaggi inviati
+  ///necessita in input il DocumentSnapshit [doc] di riferimento
+  ///
   Widget _buildMessageItem(DocumentSnapshot doc) {
-    Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+    Map<String, dynamic> data =doc.data() as Map<String, dynamic>;
     bool isMe = data['senderId'] == _auth.currentUser!.uid;
-    String messaggioId = doc.id;
-    Timestamp? timestampMessaggio = data['timestamp'];
+    String messaggioId=doc.id;
+    Timestamp? timestampMessaggio=data['timestamp'];
 
-    // Recuperiamo la lista di pittogrammi dal documento
+    /// Recuperiamo la lista di pittogrammi dal documento
     List<dynamic> pictograms = data['pictograms'] ?? [];
 
     String fullSentence = pictograms.map((p) => p['description'] ?? '').join(" ");
     int itemsPerRow = _impostazioni.gridSize.toInt();
     if (itemsPerRow < 1) itemsPerRow = 1;
-    return GestureDetector(
-      ///se messaggio premuto a lungo chiede se vuole eliminare il messaggio se è
-      ///stato inviato dall'utente
-      onLongPress: () => _eliminaMessaggio(context, isMe, messaggioId, timestampMessaggio),
-      onTap: () {
 
-        ///Quando la frase è toccata parla
-        ///
-        SintesiVocale().speak(fullSentence);
+    ///creazione del singolo messaggio
+    ///
+    return SingoloMessaggio(
+      isMe: isMe,
+      messaggioId: messaggioId,
+      timestampMessaggio: timestampMessaggio,
+      fullSentence: fullSentence,
+      pictograms: pictograms,
+      impostazioni: _impostazioni,
+      itemsPerRow: itemsPerRow,
+      cliccato: (fraseDaLeggere) {
+        SintesiVocale().speak(fraseDaLeggere);
       },
-      child: Align(
-      alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
-        constraints: BoxConstraints(maxWidth: MediaQuery
-            .of(context)
-            .size
-            .width * 0.8),
-        margin: const EdgeInsets.symmetric(vertical: 8),
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: isMe ? Colors.lightGreen[100] : Colors.white,
-          borderRadius: BorderRadius.circular(15),
-        ),
-        child: Wrap(
-          spacing: 8, // Spazio orizzontale
-          runSpacing: 8, // Spazio verticale (andata a capo)
-          alignment: WrapAlignment.start,
-          children: pictograms.map((pic) {
-            // Calcolo larghezza per averne max 3 per riga (togliendo i margini)
-
-            double totalWidth = MediaQuery.of(context).size.width * 0.7;
-            double itemWidth = (totalWidth / itemsPerRow) - 12;
-            return Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Image.network(pic['imageUrl'], width: itemWidth, height: itemWidth, fit: BoxFit.contain),
-                if (_impostazioni.showLabels)
-                Text(pic['description'] ?? '', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-              ],
-            /*  
-            double itemWidth = (MediaQuery
-                .of(context)
-                .size
-                .width * 0.7) / 3 - 12;
-            return Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Image.network(pic['imageUrl'], width: itemWidth,
-                    height: itemWidth,
-                    fit: BoxFit.contain),
-                Text(pic['description'] ?? '', style: const TextStyle(
-                    fontSize: 12, fontWeight: FontWeight.bold)),
-
-              ],
-*/
-            );
-          }).toList(),
-        ),
-      ),
-      )
+      premuto: (context,me,id,timestamp) {
+        _eliminaMessaggio(context,me,id,timestamp);
+      },
     );
   }
 
-  ///[_buildInputArea] Barra Inferiore della chat
+  ///[_buildInputArea] metodo che restituisce la
+  ///Barra di click che permette di aprire o chiudere la composizione del messaggio
   ///
-  Widget _buildInputArea() {
+  Widget _buildInputArea(){
 
     return InputArea(cliccato: (){
+
       setState((){
         _isPickerVisible=!_isPickerVisible;
         if(!_isPickerVisible) FocusScope.of(context).unfocus();
       });
-    },isPickerVisible: _isPickerVisible);
+      },
+        isPickerVisible: _isPickerVisible);
+
   }
 
-  ///Builder della barra dei suggerimenti
-  Widget _buildSuggerimenti() {
-    ///se non ce nessun messaggio non mostro nulla
-    if (_composingMessage.isEmpty) return SizedBox.shrink();
+  ///[_buildSuggerimenti] metodo che restituisce la della barra dei suggerimenti
+  ///crea la barra dei pittogrammi suggeriti.
+  ///
+  Widget _buildSuggerimenti(){
+    ///se non ce nessun messaggio non mostro nulla ed esco dal metodo
+    if(_composingMessage.isEmpty) return SizedBox.shrink();
 
     ///Ricavo l'id dell'ultimo pittogramma inserito
-    String ultimoURL = _composingMessage.last['url']!;
-    String ultimoId = ultimoURL.split('/').last;
+    String ultimoURL= _composingMessage.last['url']!;
+    String ultimoId=ultimoURL.split('/').last;
 
     ///ricavo i suggerimenti di quell'id e ricavo gli url sottoforma di lista
-    List<dynamic> suggerimenti = GestoreJson().suggerimentiDiImmagine(ultimoId);
-    List<String> listaUrl = List<String>.from(suggerimenti);
+    List<dynamic> suggerimenti=GestoreJson().suggerimentiDiImmagine(ultimoId);
+    List<String> listaUrl=List<String>.from(suggerimenti);
 
     ///se non c'è nessun suggerimento allora non mostro nulla
     if (suggerimenti.isEmpty) return SizedBox.shrink();
@@ -568,8 +487,11 @@ class _ChatPageState extends State<ChatPage> {
 
 
 
-  // --- ANTEPRIMA MESSAGGIO IN COMPOSIZIONE ---
-  Widget _buildComposerPreview() {
+  ///[_buildComposerPreview] metodo utilizzato per andare a
+  ///creare la barra di anteprima del messaggio da inviare.
+  ///ritorna la barra creata.
+  ///
+  Widget _buildComposerPreview(){
     
     return ComposizioneMessaggio(
         composingMessage: _composingMessage,
@@ -579,38 +501,51 @@ class _ChatPageState extends State<ChatPage> {
             _composingMessage.removeAt(posizioneDaEliminare);
           });
         },
-        );
+    );
   }
 
-  // --- INVIO MESSAGGIO ---
-  void _handleSendMessage() async {
-    if (_composingMessage.isEmpty) return;
+  ///[_handleSendMessage] metodo utilizzato per inviare un nuovo messaggio e registrarlo nel
+  ///database
+  ///
+  void _handleSendMessage() async{
 
-    // Prepariamo i dati per il DB
-    List<Map<String, String>> messageData = _composingMessage.map((p) =>
-    {
+    ///se non c'è nulla nella composizione del messaggio allora esce
+    ///
+    if (_composingMessage.isEmpty)    return;
+
+    ///altrimenti compongo il messaggio nel formato da inviare al database
+    ///
+    List<Map<String, String>> messageData=_composingMessage.map((p)=>{
+
       'imageUrl': p['url']!,
       'description': p['desc']!,
+
     }).toList();
 
-    // Invio tramite il servizio
+    ///tramite ChatService() invio il messaggio al db
+    ///
     await ChatService().sendPictogramMessage(
+
       chatID: widget.chatID,
       senderID: _auth.currentUser!.uid,
       pictograms: messageData,
+
     );
 
-    // Pulizia della barra
+    ///pulisco la barra di anteprima del messaggio e aggiorno così la grafica
+    ///
     setState(() {
+
       _composingMessage.clear();
-      _isPickerVisible = false; // Per chiudere dopo l'invio
+      _isPickerVisible=false;
+
     });
   }
 
   ///[_caricaPreferenze] metodo per caricare le preferenze di un determinato utente
   ///nelle impostazioni della chat
   ///
-  Future<void> _caricaPreferenze() async {
+  Future<void> _caricaPreferenze() async{
     final utente=FirebaseAuth.instance.currentUser;
 
     PreferenzeChat nuoveImpostazioni;
@@ -634,7 +569,7 @@ class _ChatPageState extends State<ChatPage> {
   ///[_caricaPermessi] metodo che permette di caricare per un determinato
   ///utente i permessi di utilizzo di determinate categorie di pittogrammi
   ///
-  Future<void> _caricaPermessi() async {
+  Future<void> _caricaPermessi() async{
 
     ///trova l'utente se non esiste allora esci dalla funzione e mantieni
     ///la lista vuota
@@ -647,17 +582,20 @@ class _ChatPageState extends State<ChatPage> {
     List<String> pittogrammiOk=await _gestorePermessi.recuperaCategorie(utente.uid);
 
 
-    ///se la pagina è attiva allora aggiorno i permessi dell'utente se ci sono
+    ///se la pagina è attiva allora aggiorno i permessi dell'utente se ci sono,
     ///altrimenti gli mostro tutto
     ///
     if(mounted)
     {
 
       setState((){
-        if(pittogrammiOk.isNotEmpty) {
+        if(pittogrammiOk.isNotEmpty){
 
           _visibleCategories=CategoriePittogrammi.categories.where((cat){
-            return pittogrammiOk.contains(cat['name']);}).toList();
+
+            return pittogrammiOk.contains(cat['name']);
+
+          }).toList();
 
         }
         else _visibleCategories=List.from(CategoriePittogrammi.categories);

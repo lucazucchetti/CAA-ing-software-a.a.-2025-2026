@@ -1,9 +1,21 @@
 import 'package:flutter/material.dart';
 
+///[ComposizioneMessaggio] classe che costruisce la barra di composizione di messaggio
+///quindi l'anteprima del messaggio da inviare
+///
 class ComposizioneMessaggio extends StatelessWidget {
 
+  ///[composingMessage] è il messaggio che si sta creando
   final List<Map<String, String>> composingMessage;
+
+  ///[invio] è la funzione che permette l'invio del messaggio composto
+  ///
   final VoidCallback invio;
+
+  ///[rimozione] è la funzione che permette di eliminare un messaggio dalla
+  ///barra di composizione, in ingresso ha la posizione del messaggio eliminato nell
+  ///composingMessage
+  ///
   final Function(int) rimozione;
 
   const ComposizioneMessaggio({
@@ -61,7 +73,7 @@ class ComposizioneMessaggio extends StatelessWidget {
                               ],
                             ),
                           ),
-                          // Bottone per rimuovere il singolo pittogramma
+                          ///Bottone rimuovi singolo pittogramma
                           Positioned(
                             right: 0,
                             top: 0,
@@ -82,7 +94,7 @@ class ComposizioneMessaggio extends StatelessWidget {
                     },
                   ),
                 ),
-                // Tasto INVIO
+                ///tasto invio pittogramma
                 Padding(
                   padding: const EdgeInsets.only(left: 8.0),
                   child: FloatingActionButton(

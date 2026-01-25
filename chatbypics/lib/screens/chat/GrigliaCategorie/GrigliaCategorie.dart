@@ -1,8 +1,18 @@
 import 'package:flutter/material.dart';
 
+///[GrigliaCategorie] classe che permette la costruzione della palette delle categorie
+///dove l'utente può selezionare le categorie per vedere i pittogrammi contenuti
+///
 class GrigliaCategorie extends StatelessWidget {
 
+  ///[visibleCategories] lista delle categorie visibili all'utente
+  ///
   final List<Map<String, String>> visibleCategories;
+
+  ///[selezionato] la funzione da eseguire quando seleziono una categoria quindi passa
+  ///il nome della categoria e il suo identificativo per procedere alla ricerca dei suoi
+  ///pittogrammi
+  ///
   final Function(String,String) selezionato;
 
   const GrigliaCategorie({
@@ -14,14 +24,6 @@ class GrigliaCategorie extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Se la lista è vuota, potrebbe essere che sta ancora caricando o che l'utente non ha permessi.
-    // Possiamo mostrare un caricamento se _visibleCategories è vuota ma _categories no.
-    if (visibleCategories.isEmpty) {
-      // Piccolo controllo: se l'utente ha davvero 0 permessi mostriamo "Nessuna categoria"
-      // Per ora assumiamo sia caricamento iniziale
-      // Se vuoi gestire il caso "0 permessi", servirebbe una variabile bool _permissionsLoaded
-      return const Center(child: CircularProgressIndicator());
-    }
 
     return GridView.builder(
       padding: const EdgeInsets.all(10),
@@ -31,10 +33,11 @@ class GrigliaCategorie extends StatelessWidget {
         mainAxisSpacing: 10,
         childAspectRatio: 0.9,
       ),
-      // USA LA LISTA FILTRATA
+
+
       itemCount: visibleCategories.length,
       itemBuilder: (context, index) {
-        // PRENDI L'ELEMENTO DALLA LISTA FILTRATA
+
         final cat = visibleCategories[index];
 
         return GestureDetector(

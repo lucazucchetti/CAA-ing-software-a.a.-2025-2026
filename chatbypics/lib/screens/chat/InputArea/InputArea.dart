@@ -2,7 +2,8 @@ import 'package:chatbypics/screens/chat/InputArea/StileInputArea.dart';
 import 'package:flutter/material.dart';
 
 ///[InputArea] Classe che costruisce il
-///Container contenente la barra inferiore della chat
+///Container contenente la barra inferiore della chat per mostrare o no
+///il picker pittogrammi
 ///
 class InputArea extends StatelessWidget {
 
