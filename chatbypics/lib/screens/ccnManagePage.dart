@@ -124,6 +124,13 @@ class _CCNManagePageState extends State<CCNManagePage> {
                            _showDeleteDialog(docId, fullName);
                         },
                       ),
+                      ///ICONA PER ACCESSO CHAT CCN
+                      IconButton(
+                        icon: const Icon(Icons.visibility_sharp, color: Colors.blue),
+                        onPressed: () {
+
+                        },
+                      ),
                     ],
                   ),
                 ),
