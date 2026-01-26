@@ -1,6 +1,5 @@
-import 'package:chatbypics/screens/ccnManagePage.dart';
+import 'package:chatbypics/screens/setting/StileSettingPage.dart';
 import 'package:chatbypics/services/auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:chatbypics/services/preferences_service.dart';
@@ -20,7 +19,6 @@ class _SettingPageState extends State<SettingPage> {
   bool _showLabels = true;
   bool _autoReadMessages = true;
   double _gridSize = 3.0; // Valore indicativo per lo slider
-
 
 
   @override
@@ -70,21 +68,23 @@ class _SettingPageState extends State<SettingPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Impostazioni"),
-        backgroundColor: Colors.deepPurple.shade50,
+        title: StileSettingPage.titoloPagina,
+        backgroundColor: StileSettingPage.coloreSfondoPagina,
       ),
       body: ListView(
         children: [
           //  SEZIONE PROFILO
-          _buildSectionHeader("Profilo"),
+          StileSettingPage.buildSectionHeader(StileSettingPage.headerProfilo),
           ListTile(
             leading: CircleAvatar(
-              backgroundColor: Colors.deepPurple,
-              child: Text(user?.email?.substring(0, 1).toUpperCase() ?? "U", style: const TextStyle(color: Colors.white)),
+              backgroundColor: StileSettingPage.coloreSfondoIconaProfilo,
+              child: Text(user?.email?.substring(0, 1).toUpperCase() ?? "U", 
+                style: StileSettingPage.stileNomeProfilo
+              ),
             ),
             title: Text(user?.email ?? "Utente"),
-            subtitle: const Text("Tocca per modificare il profilo"),
-            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+            subtitle: StileSettingPage.testoSottotitolo,
+            trailing: StileSettingPage.iconaFrecciaAperturaSezione,
             onTap: () {
               // TODO: Naviga a pagina modifica profilo
             },
@@ -93,21 +93,21 @@ class _SettingPageState extends State<SettingPage> {
           const Divider(),
 
           //  SEZIONE ACCESSIBILITÀ CAA
-          _buildSectionHeader("Accessibilità CAA"),
+          StileSettingPage.buildSectionHeader(StileSettingPage.headerAccessibilita),
 
           // Switch Etichette
           SwitchListTile(
-            title: const Text("Mostra testo sotto i simboli"),
-            subtitle: const Text("Aiuta l'associazione immagine-parola"),
+            title: StileSettingPage.titoloTestoSimboli,
+            subtitle: StileSettingPage.sottotitoloTestoSimboli,
             value: _showLabels,
-            activeThumbColor: Colors.deepPurple,
+            activeThumbColor: StileSettingPage.coloreLabel,
               onChanged: (val) => _updateVal(PreferencesService.keyShowLabels, val),
           ),
 
           // Slider Grandezza Griglia
           ListTile(
-            title: const Text("Grandezza Griglia Simboli"),
-            subtitle: Text("Dimensione attuale: ${_gridSize.toInt()}"),
+            title: StileSettingPage.titoloGrandezzaSimboli,
+            subtitle: Text("${StileSettingPage.dimensioneAttuale} ${_gridSize.toInt()}"),
           ),
           Slider(
             value: _gridSize,
@@ -122,20 +122,20 @@ class _SettingPageState extends State<SettingPage> {
           const Divider(),
 
           // SEZIONE VOCALE
-          _buildSectionHeader("Sintesi Vocale"),
+          StileSettingPage.buildSectionHeader(StileSettingPage.headerSintesiVocale),
           SwitchListTile(
-            title: const Text("Lettura Automatica"),
-            subtitle: const Text("Leggi i messaggi appena arrivano"),
+            title: StileSettingPage.titoloSintesi,
+            subtitle: StileSettingPage.sottoTitoloSintesi,
             value: _autoReadMessages,
             activeThumbColor: Colors.deepPurple,
             onChanged: (val) => _updateVal(PreferencesService.keyAutoRead, val),
           ),
 
           ListTile(
-            title: const Text("Velocità Voce"),
+            title: StileSettingPage.titoloVelocita,
             trailing: DropdownButton<String>(
-              value: "Normale",
-              items: <String>['Lenta', 'Normale', 'Veloce'].map((String value) {
+              value: StileSettingPage.defaultValue,
+              items: StileSettingPage.attributiVelocita.map((String value) {
                 return DropdownMenuItem<String>(
                   value: value,
                   child: Text(value),
@@ -150,10 +150,10 @@ class _SettingPageState extends State<SettingPage> {
           const Divider(),
 
           // SEZIONE SISTEMA
-          _buildSectionHeader("App & Sistema"),
+          StileSettingPage.buildSectionHeader(StileSettingPage.headerAppSistema),
           SwitchListTile(
             secondary: const Icon(Icons.dark_mode),
-            title: const Text("Modalità Scura"),
+            title: StileSettingPage.titoloAppSistema,
             value: _isDarkMode,
             onChanged: (val) => _updateVal(PreferencesService.keyDarkMode, val),
           ),
@@ -162,15 +162,11 @@ class _SettingPageState extends State<SettingPage> {
 
           //  TASTO LOGOUT
           Padding(
-            padding: const EdgeInsets.all(20.0),
+            padding: StileSettingPage.padding,
             child: ElevatedButton.icon(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red.shade100,
-                foregroundColor: Colors.red,
-                elevation: 0,
-              ),
-              icon: const Icon(Icons.logout),
-              label: const Text("Disconnetti"),
+              style: StileSettingPage.bottoneDisconnessione,
+              icon: StileSettingPage.iconaDisconnessione,
+              label: StileSettingPage.labelBottoneDisconnessione,
               onPressed: () async {
                 await Auth().signOut();
                 // AuthPage gestirà il cambio di stato grazie allo StreamBuilder nel main
@@ -182,18 +178,5 @@ class _SettingPageState extends State<SettingPage> {
     );
   }
 
-  // Widget helper per i titoli delle sezioni
-  Widget _buildSectionHeader(String title) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-      child: Text(
-        title.toUpperCase(),
-        style: TextStyle(
-          color: Colors.deepPurple.shade700,
-          fontWeight: FontWeight.bold,
-          fontSize: 13,
-        ),
-      ),
-    );
-  }
+  
 }
