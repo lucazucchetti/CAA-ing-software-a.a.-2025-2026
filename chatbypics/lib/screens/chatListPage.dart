@@ -1,3 +1,5 @@
+import 'package:chatbypics/screens/chat/RuoloOsservatore.dart';
+import 'package:chatbypics/screens/chat/RuoloScrittore.dart';
 import 'package:chatbypics/screens/chatPage.dart';
 import 'package:chatbypics/screens/newChatPage.dart'; // Assicurati di aver creato questo file (vedi sotto)
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -168,7 +170,10 @@ class _ChatListPageState extends State<ChatListPage> {
                     Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => ChatPage(chatID: chatId, chatName: friendName, scrittura: scrittura, chatOwnerID: currentUserId),
+                      builder: (_) =>
+                          scrittura ?
+                          ChatPage(chatID: chatId, chatName: friendName, ruolo: RuoloScrittore(), chatOwnerID: currentUserId)
+                              : ChatPage(chatID: chatId, chatName: friendName, ruolo: RuoloOsservatore(), chatOwnerID: currentUserId)
                     ),
                     );
                   },

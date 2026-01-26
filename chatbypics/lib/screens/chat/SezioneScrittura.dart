@@ -2,6 +2,7 @@ import 'package:chatbypics/screens/chat/CategoriePittogrammi.dart';
 import 'package:chatbypics/screens/chat/ComposizioneMessaggio/ComposizioneMessaggio.dart';
 import 'package:chatbypics/screens/chat/Gestori/GestorePermessi.dart';
 import 'package:chatbypics/screens/chat/InputArea/InputArea.dart';
+import 'package:chatbypics/screens/chat/SezioneLettura.dart';
 import 'package:chatbypics/screens/chat/suggerimenti/Suggerimenti.dart';
 import 'package:chatbypics/services/chat_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';

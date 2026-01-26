@@ -1,3 +1,4 @@
+import 'package:chatbypics/screens/chat/RuoloScrittore.dart';
 import 'package:chatbypics/services/chat_service.dart';
 import 'package:chatbypics/screens/chatPage.dart'; // La pagina della chat singola
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -58,7 +59,7 @@ class NewChatPage extends StatelessWidget {
                       Navigator.pushReplacement(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => ChatPage(chatID: chatId, chatName: name, scrittura: true,chatOwnerID: currentUid),
+                          builder: (_) => ChatPage(chatID: chatId, chatName: name, ruolo: RuoloScrittore(),chatOwnerID: currentUid),
                         ),
                       );
                     }

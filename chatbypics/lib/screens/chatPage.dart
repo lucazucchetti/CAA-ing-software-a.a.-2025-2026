@@ -1,3 +1,4 @@
+import 'package:chatbypics/screens/chat/RuoloChat.dart';
 import 'package:chatbypics/screens/chat/SezioneLettura.dart';
 import 'package:chatbypics/screens/chat/EliminazioneMessaggio/AvvisatoreRisultatoEliminazione.dart';
 import 'package:chatbypics/screens/chat/EliminazioneMessaggio/BannerEliminazione.dart';
@@ -21,20 +22,23 @@ class ChatPage extends StatefulWidget {
   ///
   final String chatName;
 
-  ///[scrittura] rappresenta il permesso o no di poter inviare i messaggi
-  ///
-  final bool scrittura;
-
   ///[chatOwnerID] rappresenta l'id del proprietario della chat
   ///
   final String chatOwnerID;
+
+  ///[ruolo] è l'interfaccia ruolo che la determianta chat può assumere,
+  ///o solo lettura messaggi
+  ///oppure lettura e scrittura messaggi
+  ///(PATTERN PLAYER-ROLE)
+  ///
+  final RuoloChat ruolo;
 
   const ChatPage({
     super.key,
     required this.chatID,
     required this.chatName,
-    required this.scrittura,
-    required this.chatOwnerID
+    required this.chatOwnerID,
+    required this.ruolo,
   });
 
   @override
@@ -72,10 +76,11 @@ class _ChatPageState extends State<ChatPage> {
         ),
       );
     }
+
     return Scaffold(
       backgroundColor: const Color(0xFFE5DDD5), // Sfondo neutro
       appBar: AppBar(
-        title: widget.scrittura ? Text(widget.chatName) : Text(widget.chatName+"(Osservatore)"),
+        title: Text(widget.ruolo.stampaTitolo(widget.chatName)),
         backgroundColor: Colors.deepPurple.shade100,
       ),
       body: Column(
@@ -87,15 +92,20 @@ class _ChatPageState extends State<ChatPage> {
               chatID: widget.chatID,
               utenteProprietarioChat: widget.chatOwnerID,
               premutoElimina: (idMessaggio,timestamp) {
-                _eliminaMessaggio(context, true, idMessaggio, timestamp);
+                widget.ruolo.gestisciEliminazione(
+                    context: context,
+                    chatID: widget.chatID,
+                    messageID: idMessaggio,
+                    timestamp: timestamp,
+                    isMe: true
+                );
               },
               utenteCheVisualizza: utente.uid,
             ),
           ),
 
           ///se in modalità scrittura mostro la parte della scrittura
-          if(widget.scrittura)
-            SezioneScrittura(chatID: widget.chatID, utente: utente)
+          widget.ruolo.buildSchermataComposizioneMessaggi(context, widget.chatID, utente),
         ],
       ),
     );
@@ -110,59 +120,5 @@ class _ChatPageState extends State<ChatPage> {
   /// [messaggioId] stringa che è l'id del messaggio da eliminare
   /// [timestampMessaggio] è il Timestamp di invio del messaggio
   ///
-  Future<void> _eliminaMessaggio(BuildContext cont, bool isMe, String messaggioId, Timestamp? timestampMessaggio) async{
-
-    if (!widget.scrittura) {
-      ScaffoldMessenger.of(cont).showSnackBar(
-          AvvisatoreRisultatoEliminazione().risposta("Modalità lettura", 2));
-      return;
-    }
-
-    ///se il messaggio non è mio allora esco
-    if (!isMe) return;
-
-
-    ///calcolo quando è stato inviato il messaggio e quando è stata fatta la richiesta di
-    ///eliminazione.
-    ///se non ho il timestamp di invio ancora allora lo imposto ad ora
-    ///
-    DateTime dataInvio = timestampMessaggio?.toDate() ?? DateTime.now();
-    DateTime dataDomanda = DateTime.now();
-
-    ///se il messaggio è troppo vecchio allora dico all'utente che non si può eliminare
-    if (dataDomanda
-        .difference(dataInvio)
-        .inSeconds > 30) {
-      if (cont.mounted) {
-        ScaffoldMessenger.of(cont).showSnackBar(
-            AvvisatoreRisultatoEliminazione().risposta(
-                "Impossibile eliminare il messaggio, tempo scaduto", 3)
-        );
-      }
-
-      return;
-    }
-    bool risp;
-
-    ///creo il banner di richiesta di eliminazione
-    risp = await BannerEliminazione.mostraBanner(context: cont);
-
-    ///se la risposta è affermativa allora elimino e stampo la SnackBar che avvisa
-    ///l'utente della cancellazione corretta del messaggio
-    if (risp) {
-      try {
-        await ChatService().cancellaMessaggio(widget.chatID, messaggioId);
-        if (cont.mounted) {
-          ScaffoldMessenger.of(cont).showSnackBar(
-              AvvisatoreRisultatoEliminazione().risposta(
-                  "Messaggio eliminato!", 3)
-          );
-        }
-      }
-      catch (e) {
-        print("errore nella cancellazione $e");
-      }
-    }
-  }
 
 }
