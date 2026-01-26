@@ -7,16 +7,16 @@ import 'EliminazioneMessaggio/AvvisatoreRisultatoEliminazione.dart';
 import 'EliminazioneMessaggio/BannerEliminazione.dart';
 import 'SezioneScrittura.dart';
 
-///[RuoloScrittore]
+///[RuoloScrittore] ruolo della chat Scrittore, offre i ruoli per andare a
+///costruire una chat dove l'utente può leggere e scrivere i messsaggi
+///(CONCRETE ROLE)
 ///
 class RuoloScrittore implements RuoloChat {
 
   @override
-  bool get scrittore => true;
-
-
-  @override
   Widget buildSchermataComposizioneMessaggi(BuildContext context, String chatID, User utente) {
+
+    ///creo la sezione di scrittura con i parametri
     return SezioneScrittura(
       chatID: chatID,
       utente: utente,
@@ -77,9 +77,13 @@ class RuoloScrittore implements RuoloChat {
   }
 
   @override
-  String stampaTitolo(String nomeChat) {
-    // TODO: implement stampaTitolo
-    return nomeChat;
+  PreferredSizeWidget buildAppBar(String testo) {
+
+    return AppBar(
+      title: Text(testo),
+      backgroundColor: Colors.deepPurple.shade100,
+    );
+
   }
   
 }

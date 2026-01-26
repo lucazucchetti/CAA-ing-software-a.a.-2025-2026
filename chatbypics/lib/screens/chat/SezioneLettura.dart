@@ -27,7 +27,7 @@ class SezioneLettura extends StatefulWidget {
 
   ///[premutoElimina] è la funzione da passare per eliminare i singoli messaggi
   ///
-  final Function(String messageId, Timestamp? timestamp) premutoElimina;
+  final Function(String messageId, Timestamp? timestamp, bool isMe) premutoElimina;
 
 
   const SezioneLettura({
@@ -142,7 +142,7 @@ class _SezioneLetturaState extends State<SezioneLettura> {
         SintesiVocale().speak(fraseDaLeggere);
       },
       premuto: (context, me, id, timestamp) {
-        if (me) widget.premutoElimina(id, timestamp);
+        widget.premutoElimina(id, timestamp,isMe);
       },
     );
   }

@@ -2,7 +2,6 @@ import 'package:chatbypics/screens/chat/CategoriePittogrammi.dart';
 import 'package:chatbypics/screens/chat/ComposizioneMessaggio/ComposizioneMessaggio.dart';
 import 'package:chatbypics/screens/chat/Gestori/GestorePermessi.dart';
 import 'package:chatbypics/screens/chat/InputArea/InputArea.dart';
-import 'package:chatbypics/screens/chat/SezioneLettura.dart';
 import 'package:chatbypics/screens/chat/suggerimenti/Suggerimenti.dart';
 import 'package:chatbypics/services/chat_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -396,11 +395,13 @@ class _SezioneScritturaState extends State<SezioneScrittura> {
   Widget build(BuildContext context) {
   return Column(
       children: [
+        ///anteprima messaggio se _composingMessage ha dei messaggi all'interno
         if (_composingMessage.isNotEmpty) _buildComposerPreview(),
+        ///area input
         _buildInputArea(),
         ///area suggerimenti, mostrata se _isPickerVisible è attivo
         if (_isPickerVisible) _buildSuggerimenti(),
-        // 4. Selettore Pittogrammi Persistente
+        ///selettore pittogrammi se _isPickerVisible è attivo
         if (_isPickerVisible) _buildPersistentPicker(),
       ],
     );

@@ -6,22 +6,28 @@ import 'package:flutter/src/widgets/framework.dart';
 
 import 'EliminazioneMessaggio/AvvisatoreRisultatoEliminazione.dart';
 
+///[RuoloOsservatore] ruolo della chat Osservatore, offre i ruoli per andare a
+///costruire una chat dove l'utente può solo leggere i messaggi e non scrivere
+///(CONCRETE ROLE)
+///
 class RuoloOsservatore implements RuoloChat{
 
   @override
-  // TODO: implement scrittore
-  bool get scrittore => true;
-
-
-  @override
   Widget buildSchermataComposizioneMessaggi(BuildContext context, String chatID, User utente) {
+
+    ///mostro solo la scritta modalità osservatore
     return Center(
-        child: Text("MODALITA OSSERVATORE"),
+        child: Text("MODALITA' OSSERVATORE"),
     );
   }
 
   @override
   Future<void> gestisciEliminazione({required BuildContext context, required String chatID, required String messageID, required Timestamp? timestamp, required bool isMe}) async {
+
+    ///se la pagina è attiva vado a mostrare che non posso eliminare il messaggio perchè sono
+    ///in modalità lettura, se il messaggio è "mio" inteso come di chi sto vedendo la chat
+    ///
+    if(!isMe) return;
 
     if(context.mounted)
     {
@@ -31,10 +37,16 @@ class RuoloOsservatore implements RuoloChat{
     }
   }
 
+
   @override
-  String stampaTitolo(String nomeChat) {
-    // TODO: implement stampaTitolo
-    return "$nomeChat (Osservatore)";
+  PreferredSizeWidget buildAppBar(String testo) {
+
+    ///aggiungo nel testo (osservatore) e cambio il colore
+    return AppBar(
+      title: Text("$testo (osservatore)"),
+      backgroundColor: Colors.blue.shade100,
+    );
+
   }
 
 }
