@@ -181,14 +181,14 @@ class _ChatListPageState extends State<ChatListPage> {
       ),
 
       // BOTTONE NUOVA CHAT
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: scrittura ? FloatingActionButton(
         onPressed: () {
           // Naviga alla pagina di selezione contatti
           Navigator.push(context, MaterialPageRoute(builder: (_) => const NewChatPage()));
         },
         backgroundColor: Colors.deepPurple,
         child: const Icon(Icons.person_add, color: Colors.white),
-      ),
+      ): null,
     );
   }
 }
