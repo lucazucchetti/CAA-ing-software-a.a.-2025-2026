@@ -67,85 +67,19 @@ class _SettingPageState extends State<SettingPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: StileSettingPage.titoloPagina,
-        backgroundColor: StileSettingPage.coloreSfondoPagina,
-      ),
+      appBar: StileSettingPage.buildAppBar,
       body: ListView(
         children: [
-          //  SEZIONE PROFILO
-          StileSettingPage.buildSectionHeader(StileSettingPage.headerProfilo),
-          ListTile(
-            leading: CircleAvatar(
-              backgroundColor: StileSettingPage.coloreSfondoIconaProfilo,
-              child: Text(user?.email?.substring(0, 1).toUpperCase() ?? "U", 
-                style: StileSettingPage.stileNomeProfilo
-              ),
-            ),
-            title: Text(user?.email ?? "Utente"),
-            subtitle: StileSettingPage.testoSottotitolo,
-            trailing: StileSettingPage.iconaFrecciaAperturaSezione,
-            onTap: () {
-              // TODO: Naviga a pagina modifica profilo
-            },
-          ),
+          StileSettingPage.buildSettingProfilo(user?.email?.substring(0, 1).toUpperCase() ?? "U", user?.email ?? "Utente"),
 
           const Divider(),
 
-          //  SEZIONE ACCESSIBILITÀ CAA
-          StileSettingPage.buildSectionHeader(StileSettingPage.headerAccessibilita),
-
-          // Switch Etichette
-          SwitchListTile(
-            title: StileSettingPage.titoloTestoSimboli,
-            subtitle: StileSettingPage.sottotitoloTestoSimboli,
-            value: _showLabels,
-            activeThumbColor: StileSettingPage.coloreLabel,
-              onChanged: (val) => _updateVal(PreferencesService.keyShowLabels, val),
-          ),
-
-          // Slider Grandezza Griglia
-          ListTile(
-            title: StileSettingPage.titoloGrandezzaSimboli,
-            subtitle: Text("${StileSettingPage.dimensioneAttuale} ${_gridSize.toInt()}"),
-          ),
-          Slider(
-            value: _gridSize,
-            min: 1,
-            max: 5,
-            divisions: 4,
-            label: _gridSize.toInt().toString(),
-            activeColor: Colors.deepPurple,
-            onChanged: (val) => _updateVal(PreferencesService.keyGridSize, val),
-          ),
-
+          StileSettingPage.buildSettingAccessibilita(_showLabels, (val) => _updateVal(PreferencesService.keyShowLabels, val), _gridSize, (val) => _updateVal(PreferencesService.keyGridSize, val)),
+          
           const Divider(),
+          StileSettingPage.buildSettingSintesiVocale(_autoReadMessages, (val) => _updateVal(PreferencesService.keyAutoRead, val)),
 
-          // SEZIONE VOCALE
-          StileSettingPage.buildSectionHeader(StileSettingPage.headerSintesiVocale),
-          SwitchListTile(
-            title: StileSettingPage.titoloSintesi,
-            subtitle: StileSettingPage.sottoTitoloSintesi,
-            value: _autoReadMessages,
-            activeThumbColor: Colors.deepPurple,
-            onChanged: (val) => _updateVal(PreferencesService.keyAutoRead, val),
-          ),
-
-          ListTile(
-            title: StileSettingPage.titoloVelocita,
-            trailing: DropdownButton<String>(
-              value: StileSettingPage.defaultValue,
-              items: StileSettingPage.attributiVelocita.map((String value) {
-                return DropdownMenuItem<String>(
-                  value: value,
-                  child: Text(value),
-                );
-              }).toList(),
-              onChanged: (_) {
-                // TODO: Implementa logica TTS
-              },
-            ),
-          ),
+          
 
           const Divider(),
 

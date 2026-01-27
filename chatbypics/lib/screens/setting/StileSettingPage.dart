@@ -19,6 +19,24 @@ abstract class StileSettingPage{
 
   static Icon iconaFrecciaAperturaSezione = Icon(Icons.arrow_forward_ios, size: 16);
 
+  static Widget buildSettingProfilo(String emailPerLogo, String email){
+    buildSectionHeader(headerProfilo);
+    return ListTile(
+      leading: CircleAvatar(
+        backgroundColor: coloreSfondoIconaProfilo,
+        child: Text(emailPerLogo, style: stileNomeProfilo
+        ),
+      ),
+      title: Text(email),
+      subtitle: testoSottotitolo,
+      trailing: iconaFrecciaAperturaSezione,
+      onTap: () {
+        // TODO: Naviga a pagina modifica profilo
+      },
+    );
+  }
+  
+
   ///***SETTAGGI STILE GRAFICO SEZIONE ACCESSIBILITà CAA***
   static String headerAccessibilita = "Accessibilità CAA";
   static Text titoloTestoSimboli = Text("Mostra testo sotto i simboli");
@@ -31,6 +49,34 @@ abstract class StileSettingPage{
 
   static String dimensioneAttuale = "DimensioneAttuale";
 
+  static Widget buildSettingAccessibilita(bool showLabels, void Function(bool) salvaStatoEtichetta, double gridSize, void Function(double) salvaStatoSlider){
+    buildSectionHeader(StileSettingPage.headerAccessibilita);
+    return Column(
+      children: [
+        SwitchListTile(
+            title: StileSettingPage.titoloTestoSimboli,
+            subtitle: StileSettingPage.sottotitoloTestoSimboli,
+            value: showLabels,
+            activeThumbColor: StileSettingPage.coloreLabel,
+              onChanged: salvaStatoEtichetta,
+        ),
+        ListTile(
+            title: StileSettingPage.titoloGrandezzaSimboli,
+            subtitle: Text("${StileSettingPage.dimensioneAttuale} ${gridSize.toInt()}"),
+        ),
+        Slider(
+            value: gridSize,
+            min: 1,
+            max: 5,
+            divisions: 4,
+            label: gridSize.toInt().toString(),
+            activeColor: Colors.deepPurple,
+            onChanged: salvaStatoSlider
+          ),
+      ],
+    );
+  }
+
   ///***SETTAGGI STILE GRAFICO SINTESI VOCALE***
   static String headerSintesiVocale = "Sintesi vocale";
   static Text titoloSintesi = Text("Lettura Automatica");
@@ -39,6 +85,37 @@ abstract class StileSettingPage{
   static Text titoloVelocita = Text("Velocità Voce");
   static const List<String> attributiVelocita = <String>['Lenta', 'Normale', 'Veloce'];
   static String defaultValue = "Normale";
+
+  static Widget buildSettingSintesiVocale(bool autoReadMessages, void Function(bool) updatePreferenceAutoRead){
+    return Column(
+      children: [
+        buildSectionHeader(headerSintesiVocale),
+          SwitchListTile(
+            title: titoloSintesi,
+            subtitle: sottoTitoloSintesi,
+            value: autoReadMessages,
+            activeThumbColor: Colors.deepPurple,
+            onChanged: updatePreferenceAutoRead,
+          ),
+
+          ListTile(
+            title: titoloVelocita,
+            trailing: DropdownButton<String>(
+              value: defaultValue,
+              items: attributiVelocita.map((String value) {
+                return DropdownMenuItem<String>(
+                  value: value,
+                  child: Text(value),
+                );
+              }).toList(),
+              onChanged: (_) {
+                // TODO: Implementa logica TTS
+              },
+            ),
+          )
+      ],
+    );
+  }
 
   ///***SETTAGGI STILE GRAFICO APP & SISTEMA
   static String headerAppSistema = "App & sistema";
@@ -68,6 +145,12 @@ abstract class StileSettingPage{
       ),
     );
   }
+
+  ///
+  static AppBar buildAppBar= AppBar(
+    title: StileSettingPage.titoloPagina,
+    backgroundColor: StileSettingPage.coloreSfondoPagina,
+  );
   
   
 
