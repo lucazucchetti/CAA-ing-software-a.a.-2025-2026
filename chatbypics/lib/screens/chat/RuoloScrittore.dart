@@ -3,7 +3,7 @@ import 'package:cloud_firestore_platform_interface/src/timestamp.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../../services/chat_service.dart';
-import 'EliminazioneMessaggio/AvvisatoreSnackBar.dart';
+import '../../services/AvvisatoreSnackBar.dart';
 import 'EliminazioneMessaggio/BannerEliminazione.dart';
 import 'SezioneScrittura.dart';
 

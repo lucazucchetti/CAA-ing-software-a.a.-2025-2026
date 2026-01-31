@@ -1,4 +1,4 @@
-import 'package:chatbypics/screens/chat/EliminazioneMessaggio/AvvisatoreSnackBar.dart';
+import 'package:chatbypics/services/AvvisatoreSnackBar.dart';
 import 'package:chatbypics/screens/chat/RuoloScrittore.dart';
 import 'package:chatbypics/services/chat_service.dart';
 import 'package:chatbypics/screens/chatPage.dart'; // La pagina della chat singola
