@@ -1,3 +1,4 @@
+import 'package:chatbypics/screens/chatList/RuoloListaTerzi.dart';
 import 'package:chatbypics/screens/editCcnPage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -132,7 +133,7 @@ class _CCNManagePageState extends State<CCNManagePage> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => ChatListPage(osservatore: docId),
+                              builder: (context) => ChatListPage(osservatore: docId, nomeCCN: fullName,ruolo: RuoloListaTerzi()),
                             ),
                           );
                           },

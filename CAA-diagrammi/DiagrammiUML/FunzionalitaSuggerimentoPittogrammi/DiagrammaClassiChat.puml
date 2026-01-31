@@ -1,0 +1,55 @@
+@startuml DiagrammaClassiChat
+
+class ChatPage<<Player>>
+{
+
+}
+
+interface RuoloChat<<Role>>
+{
+
+}
+
+class RuoloOsservatore<<Concrete role>>
+{
+
+}
+
+class RuoloScrittore<<Conrete role>>
+{
+
+}
+
+class PreferenzeChat
+{
+
+}
+
+class SezioneScritura
+{
+
+}
+
+class SezioneLettura
+{
+    
+}
+
+abstract class CategoriePittogrammi<<classe statica>>
+{
+
+}
+
+
+
+
+RuoloChat ^-- RuoloScrittore
+
+RuoloChat ^-- RuoloOsservatore
+
+
+
+
+
+
+@enduml

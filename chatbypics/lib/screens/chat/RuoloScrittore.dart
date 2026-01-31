@@ -3,7 +3,7 @@ import 'package:cloud_firestore_platform_interface/src/timestamp.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../../services/chat_service.dart';
-import 'EliminazioneMessaggio/AvvisatoreRisultatoEliminazione.dart';
+import 'EliminazioneMessaggio/AvvisatoreSnackBar.dart';
 import 'EliminazioneMessaggio/BannerEliminazione.dart';
 import 'SezioneScrittura.dart';
 
@@ -43,7 +43,7 @@ class RuoloScrittore implements RuoloChat {
         .inSeconds > 30) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-            AvvisatoreRisultatoEliminazione().risposta("Impossibile eliminare il messaggio, tempo scaduto", 3));
+            AvvisatoreSnackBar().risposta("Impossibile eliminare il messaggio, tempo scaduto", 3));
       }
 
       return;
@@ -60,7 +60,7 @@ class RuoloScrittore implements RuoloChat {
         await ChatService().cancellaMessaggio(chatID, messageID);
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-              AvvisatoreRisultatoEliminazione().risposta(
+              AvvisatoreSnackBar().risposta(
                   "Messaggio eliminato!", 3)
           );
         }
@@ -68,7 +68,7 @@ class RuoloScrittore implements RuoloChat {
       catch (e) {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-              AvvisatoreRisultatoEliminazione().risposta(
+              AvvisatoreSnackBar().risposta(
                   "Impossibile cancellare a causa di un errore riporva più tardi", 3)
           );
         }

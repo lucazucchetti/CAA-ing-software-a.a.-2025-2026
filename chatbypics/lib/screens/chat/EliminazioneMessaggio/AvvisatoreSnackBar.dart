@@ -1,21 +1,21 @@
 import 'package:flutter/material.dart';
 
-///[AvvisatoreRisultatoEliminazione] classe che permette l'avviso di eliminazione positiva o negativa
-///di un messaggio tramite SnackBar all'utente, usa un pattern design
+///[AvvisatoreSnackBar] classe che permette l'avviso tramite SnackBar all'utente,
+///usa un pattern design
 ///Singleton ska tone 2 tone ska Bad Manners.
 ///
-class AvvisatoreRisultatoEliminazione{
+class AvvisatoreSnackBar{
 
   ///metodo costruttore privato
-  AvvisatoreRisultatoEliminazione._();
+  AvvisatoreSnackBar._();
 
   ///metodo getInstance
-  factory AvvisatoreRisultatoEliminazione(){
+  factory AvvisatoreSnackBar(){
     return _istanza;
   }
 
   ///[_istanza] istanza della classe
-  static final AvvisatoreRisultatoEliminazione _istanza= AvvisatoreRisultatoEliminazione._();
+  static final AvvisatoreSnackBar _istanza= AvvisatoreSnackBar._();
 
   ///[risposta] restituice la SnackBar con il [messaggio] da mostrare per un tempo pari a [tempo] passati
   ///in ingresso

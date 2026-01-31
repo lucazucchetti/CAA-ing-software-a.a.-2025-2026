@@ -4,7 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/src/widgets/framework.dart';
 
-import 'EliminazioneMessaggio/AvvisatoreRisultatoEliminazione.dart';
+import 'EliminazioneMessaggio/AvvisatoreSnackBar.dart';
 
 ///[RuoloOsservatore] ruolo della chat Osservatore, offre i ruoli per andare a
 ///costruire una chat dove l'utente può solo leggere i messaggi e non scrivere
@@ -32,7 +32,7 @@ class RuoloOsservatore implements RuoloChat{
     if(context.mounted)
     {
       ScaffoldMessenger.of(context).showSnackBar(
-          AvvisatoreRisultatoEliminazione().risposta("Solo Lettura", 3)
+          AvvisatoreSnackBar().risposta("Solo Lettura", 3)
       );
     }
   }
