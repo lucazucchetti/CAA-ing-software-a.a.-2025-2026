@@ -15,9 +15,16 @@ class _SettingPageState extends State<SettingPage> {
   final PreferencesService _prefService = PreferencesService();
   final User? user = Auth().currentUser;
 
+  ///[_isDarkMode] impostazione default del tema dell'applicazione
   bool _isDarkMode = false;
+
+  ///[_showLabels] impostazione default per mostrare le etichette descrittive sotto ai pittogrammi
   bool _showLabels = true;
+
+  ///[_autoReadMessages] impostazione default per la lettura automatica dei pittogrammi
   bool _autoReadMessages = true;
+
+  ///[_gridSize] impostazione default per la grandezza della griglia dei pittogrammi
   double _gridSize = 3.0; // Valore indicativo per lo slider
 
 
@@ -26,12 +33,12 @@ class _SettingPageState extends State<SettingPage> {
     super.initState();
     _initPreferences(); // Carica le impostazioni all'avvio
   }
-  // Carica i dati usando il service
+  ///[_initPreferences] metodo che carica i dati usando il service
   void _initPreferences() async {
     if (user == null) return;
     var prefs = await _prefService.getUserPreferences(user!.uid);
 
-    // Aggiorna la UI solo se la pagina è ancora caricata
+    // Aggiorna l'interfaccia solamente se è già caricata
     if (mounted) {
       setState(() {
         if (prefs.containsKey(PreferencesService.keyDarkMode)) {
@@ -49,21 +56,20 @@ class _SettingPageState extends State<SettingPage> {
       });
     }
   }
-  // Funzione helper per aggiornare UI e Database insieme
+  ///[_updateVal] Metodo per aggiornare contemporaneamente interfaccia e firebase DB
   void _updateVal(String key, dynamic value) {
-    // Aggiorna UI locale
     setState(() {
       if (key == PreferencesService.keyShowLabels) _showLabels = value;
       if (key == PreferencesService.keyGridSize) _gridSize = value;
       if (key == PreferencesService.keyAutoRead) _autoReadMessages = value;
       if (key == PreferencesService.keyDarkMode) _isDarkMode = value;
     });
-    // Salva su DB tramite Service
     if (user != null) {
       _prefService.updatePreference(user!.uid, key, value);
     }
   }
-
+  ///[build] costruisce la pagina, tutte le personalizzazioni grafiche sono realizzate
+  ///nella classe [StileSettingPage]
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -79,34 +85,13 @@ class _SettingPageState extends State<SettingPage> {
           const Divider(),
           StileSettingPage.buildSettingSintesiVocale(_autoReadMessages, (val) => _updateVal(PreferencesService.keyAutoRead, val)),
 
-          
+          const Divider(),
+
+          StileSettingPage.buildSettingAppSistema(_isDarkMode, (val) => _updateVal(PreferencesService.keyDarkMode, val)),
 
           const Divider(),
 
-          // SEZIONE SISTEMA
-          StileSettingPage.buildSectionHeader(StileSettingPage.headerAppSistema),
-          SwitchListTile(
-            secondary: const Icon(Icons.dark_mode),
-            title: StileSettingPage.titoloAppSistema,
-            value: _isDarkMode,
-            onChanged: (val) => _updateVal(PreferencesService.keyDarkMode, val),
-          ),
-
-          const Divider(),
-
-          //  TASTO LOGOUT
-          Padding(
-            padding: StileSettingPage.padding,
-            child: ElevatedButton.icon(
-              style: StileSettingPage.bottoneDisconnessione,
-              icon: StileSettingPage.iconaDisconnessione,
-              label: StileSettingPage.labelBottoneDisconnessione,
-              onPressed: () async {
-                await Auth().signOut();
-                // AuthPage gestirà il cambio di stato grazie allo StreamBuilder nel main
-              },
-            ),
-          ),
+          StileSettingPage.tastoLogout(() => Auth().signOut()),
         ],
       ),
     );
