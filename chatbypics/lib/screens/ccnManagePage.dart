@@ -52,16 +52,12 @@ class _CCNManagePageState extends State<CCNManagePage> {
               String cognome = userData['Cognome'] ?? "";
               String fullName = "$nome $cognome";
               bool isActive = userData['profiloAttivo'] ?? true;
-
               return Stileccnmanagepage.buildSchedaListaCcn(fullName, isActive, context, docId, userData);
-              
             },
           );
         },
       ),
-      floatingActionButton: Stileccnmanagepage.buildBottoneAggiuntaCcn(context)
+      floatingActionButton: Stileccnmanagepage.buildBottoneAggiuntaCcn(context),
     );
   }
-
-  
 }

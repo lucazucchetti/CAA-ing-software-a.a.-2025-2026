@@ -1,3 +1,4 @@
+import 'package:chatbypics/services/AvvisatoreSnackBar.dart';
 import 'package:chatbypics/screens/chat/RuoloScrittore.dart';
 import 'package:chatbypics/services/chat_service.dart';
 import 'package:chatbypics/screens/chatPage.dart'; // La pagina della chat singola
@@ -65,7 +66,9 @@ class NewChatPage extends StatelessWidget {
                     }
                   } catch (e) {
                     Navigator.pop(context); // Chiudi caricamento in caso di errore
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Errore: $e")));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      AvvisatoreSnackBar().risposta("Errore: $e", 4)
+                    );
                   }
                 },
               );

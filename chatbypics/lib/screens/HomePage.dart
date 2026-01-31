@@ -1,4 +1,5 @@
 import 'package:chatbypics/screens/ccnManagePage.dart';
+import 'package:chatbypics/screens/chatList/RuoloListaMia.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -83,7 +84,7 @@ class _HomepageState extends State<Homepage> {
     // 2. COSTRUIAMO LE LISTE IN BASE AL RUOLO
     // Lista delle Pagine
     List<Widget> pages = [
-      const ChatListPage(), // Indice 0: Sempre visibile
+      ChatListPage(ruolo: RuoloListaMia()), // Indice 0: Sempre visibile
     ];
 
     // Lista dei Bottoni
