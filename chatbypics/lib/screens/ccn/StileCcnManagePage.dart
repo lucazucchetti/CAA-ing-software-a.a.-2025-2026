@@ -1,4 +1,5 @@
 import 'package:chatbypics/screens/addCcnPage.dart';
+import 'package:chatbypics/screens/chatList/RuoloListaTerzi.dart';
 import 'package:chatbypics/screens/chatListPage.dart';
 import 'package:chatbypics/screens/editCcnPage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -137,7 +138,7 @@ abstract class Stileccnmanagepage {
       children: [
         buildIconaModifica(context, fullName, userData, docId),
         buildIconaElimina(context, docId, fullName),
-        buildIconaOsservaChat(context, docId),
+        buildIconaOsservaChat(context, docId, fullName),
       ],
     );
   }
@@ -171,14 +172,14 @@ abstract class Stileccnmanagepage {
   }
 
   ///[buildIconaOsservaChat] Costruisce l'icona cliccabile per osservare le chat del ccn
-  static IconButton buildIconaOsservaChat(BuildContext context, String docId){
+  static IconButton buildIconaOsservaChat(BuildContext context, String docId, String nomeCcn){
     return IconButton(
       icon: const Icon(Icons.visibility_sharp, color: Colors.blue),
       onPressed: () {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => ChatListPage(osservatore: docId),
+            builder: (context) => ChatListPage(osservatore: docId, ruolo: RuoloListaTerzi(), nomeCCN: nomeCcn),
           ),
         );
       },
