@@ -337,13 +337,57 @@ class PreferencesService<<Delegate>>{
 
 }
 
+class ChatListPage<<Player>>{
+    +osservatore: String? {ReadOnly};
+    +nomeCCN: String? {ReadOnly};
+    
+    +createState(): ChatListPageState;
+
+}
+
+class ChatListPageState<<Player>>{
+    -currentUserId: String;
+    -isSearching: bool=false;
+    -searchController: TextEditingController{ReadOnly};
+    -searchText: String="";
+    
+    +initState(): void;
+    +dispose():void;
+    +build(BuildContext context): Widget;
+}
+
+abstract StileChatListPage{
+    ...
+}
+
+interface RuoloLista<<Role>>{
+    +buildBottone(BuildContext context): Widget;
+    +getColoreBackground(): Color;
+    +getColoreIcone(): Color;
+    +getTestoIntestazione(String? nomeUtente): Text;
+    +getRuoloChatPage(): RuoloChat;
+}
+
+class RuoloListaMia<<Concrete role>>{
+
+}
+
+class RuoloListaTerzi<<Concrete role>>{
+
+}
+
+RuoloLista <|.. RuoloListaMia
+RuoloLista <|.. RuoloListaTerzi
+RuoloLista <--o ChatListPage
+ChatListPageState <.. ChatListPage: <<crea>>
+StileChatListPage <.. ChatListPageState: <<usa stili grafici>>
 
 
 RuoloChat <|.. RuoloScrittore
 
 RuoloChat <|.. RuoloOsservatore
 
-ChatPage o--> RuoloChat: <<usa>>
+ChatPage o--> RuoloChat
 
 ChatPage ..> ChatPageState: <<crea>>
 
@@ -424,6 +468,9 @@ Suggerimenti ..>StileSuggerimenti : <<usa stili grafici>>
 SezioneScrittura ..> SezioneScritturaState : <<crea>>
 
 SintesiVocale o--> FlutterTts
+
+ChatListPage ..> ChatPage: <<crea>>
+ 
 
 
 

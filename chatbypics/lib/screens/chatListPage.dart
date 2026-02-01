@@ -1,16 +1,21 @@
-import 'package:chatbypics/screens/chat/RuoloOsservatore.dart';
-import 'package:chatbypics/screens/chat/RuoloScrittore.dart';
 import 'package:chatbypics/screens/chatList/RuoloLista.dart';
 import 'package:chatbypics/screens/chatPage.dart';
-import 'package:chatbypics/screens/newChatPage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class ChatListPage extends StatefulWidget {
 
+  ///[osservatore] è l'id di chi sta osservando la chat(quindi il tutor)
+  ///può essere null, se è null allora la lista è dell'utente
+  ///
   final String? osservatore;
+  ///[nomeCCN] nome del CCN del quale si stà vedendo la lista, può essere null
+  ///in questo caso allora è perchè non si sta vedendo la lista del ccn ma la propia
   final String? nomeCCN;
+  ///[ruolo] RuoloLista è il ruolo che si assume in base a se si sta osservando una lista chat del
+  ///ccn oppure la propia, pattern player role
+  ///
   final RuoloLista ruolo;
 
   const ChatListPage({
@@ -26,8 +31,10 @@ class ChatListPage extends StatefulWidget {
 }
 
 class _ChatListPageState extends State<ChatListPage> {
+
+  ///[currentUserId] id di chi ha fatto l'accesso
+  ///
   late String currentUserId;
-  late bool scrittura;
 
   bool _isSearching = false; // Se stiamo cercando o no
   final TextEditingController _searchController = TextEditingController();
@@ -36,8 +43,9 @@ class _ChatListPageState extends State<ChatListPage> {
   @override
   void initState() {
     super.initState();
+
+
     currentUserId = widget.osservatore ?? FirebaseAuth.instance.currentUser!.uid;
-    widget.osservatore==null ? scrittura=true: scrittura=false;
 
     // Ascoltiamo cosa scrive l'utente in tempo reale
     _searchController.addListener(() {
