@@ -1,13 +1,10 @@
 import 'package:chatbypics/screens/authPage.dart';
-import 'package:chatbypics/screens/verifyEmailPage.dart';
-import 'package:chatbypics/services/auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart'; // Importa Firestore
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'package:chatbypics/screens/HomePage.dart';
-import 'package:chatbypics/screens/chatListPage.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
