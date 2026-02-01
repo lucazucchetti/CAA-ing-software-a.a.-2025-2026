@@ -125,8 +125,6 @@ class _SezioneLetturaState extends State<SezioneLettura> {
 
     String fullSentence = pictograms.map((p) => p['description'] ?? '').join(
         " ");
-    int itemsPerRow = _impostazioni.gridSize.toInt();
-    if (itemsPerRow < 1) itemsPerRow = 1;
 
     ///creazione del singolo messaggio
     ///
@@ -137,7 +135,6 @@ class _SezioneLetturaState extends State<SezioneLettura> {
       fullSentence: fullSentence,
       pictograms: pictograms,
       impostazioni: _impostazioni,
-      itemsPerRow: itemsPerRow,
       cliccato: (fraseDaLeggere) {
         SintesiVocale().speak(fraseDaLeggere);
       },

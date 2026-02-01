@@ -78,6 +78,18 @@ class _SezioneScritturaState extends State<SezioneScrittura> {
   ///
   List<Map<String, String>> _visibleCategories = [];
 
+  ///[_gestoreJson] il gestore del file Json singleton
+  ///
+  final GestoreJson _gestoreJson=GestoreJson();
+
+  ///[_chatService] il chat service usato
+  ///
+  final ChatService _chatService=ChatService();
+
+  ///[_pictogramService] il pictogram service
+  ///
+  final PictogramService _pictogramService=PictogramService();
+
   ///[initState] Stato iniziale eseguito una volta all'apertura della chat
   ///
   @override
@@ -91,7 +103,7 @@ class _SezioneScritturaState extends State<SezioneScrittura> {
 
     ///leggo il file json, carico i dati nella struttura dati
     ///
-    GestoreJson().leggiJson();
+    _gestoreJson.leggiJson();
   }
 
   ///[_aggiungiPittogramma] funzione che permette di aggiornare i suggerimenti
@@ -115,7 +127,7 @@ class _SezioneScritturaState extends State<SezioneScrittura> {
       String oldURL=_composingMessage.last['url']!;
       String oldId=oldURL.split('/').last;
 
-      GestoreJson().aggiornamentoSuggerimenti(oldId,newURL);
+      _gestoreJson.aggiornamentoSuggerimenti(oldId,newURL);
     }
 
     setState((){
@@ -143,7 +155,7 @@ class _SezioneScritturaState extends State<SezioneScrittura> {
 
     ///tramite ChatService() invio il messaggio al db
     ///
-    await ChatService().sendPictogramMessage(
+    await _chatService.sendPictogramMessage(
 
       chatID: widget.chatID,
       senderID: widget.utente.uid,
@@ -220,7 +232,7 @@ class _SezioneScritturaState extends State<SezioneScrittura> {
 
       ///avviene la ricerca dei pittogrammi
       ///
-      var results=await PictogramService().searchPictograms(term);
+      var results=await _pictogramService.searchPictograms(term);
 
       ///visto che ora ha i pittogrammi smette di mostrare il caricamento e
       ///mostra i risultati
@@ -261,7 +273,7 @@ class _SezioneScritturaState extends State<SezioneScrittura> {
     try {
       ///effettuo la ricerca
       ///
-      var results=await PictogramService().searchPictograms(query);
+      var results=await _pictogramService.searchPictograms(query);
       ///se la ricerca ha esito positivo mostra i siboli
       ///
       setState((){
@@ -305,7 +317,7 @@ class _SezioneScritturaState extends State<SezioneScrittura> {
     String ultimoId=ultimoURL.split('/').last;
 
     ///ricavo i suggerimenti di quell'id e ricavo gli url sottoforma di lista
-    List<dynamic> suggerimenti=GestoreJson().suggerimentiDiImmagine(ultimoId);
+    List<dynamic> suggerimenti=_gestoreJson.suggerimentiDiImmagine(ultimoId);
     List<String> listaUrl=List<String>.from(suggerimenti);
 
     ///se non c'è nessun suggerimento allora non mostro nulla
@@ -319,7 +331,7 @@ class _SezioneScritturaState extends State<SezioneScrittura> {
     return Suggerimenti(
       dati: listaUrl,
       selezionato: (urlCliccato) async {
-        String descrizione=await PictogramService().getDescrizione(urlCliccato);
+        String descrizione=await _pictogramService.getDescrizione(urlCliccato);
         _aggiungiPittogramma(urlCliccato, descrizione);
       },
     );
