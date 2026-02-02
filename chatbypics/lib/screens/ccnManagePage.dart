@@ -11,7 +11,7 @@ class CCNManagePage extends StatefulWidget {
 }
 
 class _CCNManagePageState extends State<CCNManagePage> {
-  // Recuperiamo l'ID del Tutor loggato per filtrare i suoi utenti
+  ///[currentTutorId] variabile per recuperare l'ID del Tutor loggato per filtrare i suoi utenti
   final String currentTutorId = FirebaseAuth.instance.currentUser!.uid;
 
   @override

@@ -17,10 +17,13 @@ class EditCcnPage extends StatefulWidget {
 }
 
 class _EditCcnPageState extends State<EditCcnPage> {
+  ///[_isLoading] variabile per restituire la barra di caricamento
   bool _isLoading = false;
+  ///[_isActive] variabile per impedire l'accesso del ccn in caso venisse bloccato dal tutor
   late bool _isActive;
+  ///[_allCategories] lista delle categorie che possono essere nascoste al ccn
   final List<String> _allCategories = Stileccneditpage.allCategories;
-
+  ///[_categoryStates] mappa le categorie visibili per mostrare solo quelle al ccn
   final Map<String, bool> _categoryStates = {};
 
   @override
@@ -30,7 +33,7 @@ class _EditCcnPageState extends State<EditCcnPage> {
 
     List<dynamic> savedCategories = widget.userData['enabledCategories'] ?? _allCategories;
 
-    // Inizializziamo gli switch
+    //inizializzazione degli switch per disabilitare le categorie (tutti attivi di default)
     for (var cat in _allCategories) {
       _categoryStates[cat] = savedCategories.contains(cat);
     }
@@ -58,21 +61,19 @@ class _EditCcnPageState extends State<EditCcnPage> {
     setState(() => _isLoading = true);
 
     try {
-      // 1. Ricostruiamo la lista delle categorie abilitate (Solo quelle attive)
       List<String> enabledList = [];
       _categoryStates.forEach((key, value) {
         if (value == true) enabledList.add(key);
       });
 
-      // 2. Aggiorniamo Firestore
       await FirebaseFirestore.instance.collection('users').doc(widget.userId).update({
         'profiloAttivo': _isActive,
-        'enabledCategories': enabledList, // Salviamo la lista
+        'enabledCategories': enabledList,
       });
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Profilo aggiornato con successo!")));
-        Navigator.pop(context); // Torna indietro
+        Navigator.pop(context);
       }
     } catch (e) {
       if (mounted) {

@@ -141,7 +141,7 @@ abstract class StileSettingPage{
                 );
               }).toList(),
               onChanged: (_) {
-                // TODO: Implementa logica TTS
+                //implementazione per modificare la velocità di lettura
               },
             ),
           )

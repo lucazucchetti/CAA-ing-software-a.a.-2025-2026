@@ -13,6 +13,7 @@ class SettingPage extends StatefulWidget {
 
 class _SettingPageState extends State<SettingPage> {
   final PreferencesService _prefService = PreferencesService();
+  ///[user] variabile che salva che l'utente per salvare le modifiche nel documento associato all'utente nel DB
   final User? user = Auth().currentUser;
 
   ///[_isDarkMode] impostazione default del tema dell'applicazione
@@ -38,7 +39,7 @@ class _SettingPageState extends State<SettingPage> {
     if (user == null) return;
     var prefs = await _prefService.getUserPreferences(user!.uid);
 
-    // Aggiorna l'interfaccia solamente se è già caricata
+    //aggiorna l'interfaccia solo in caso sia già carica [mounted]
     if (mounted) {
       setState(() {
         if (prefs.containsKey(PreferencesService.keyDarkMode)) {
