@@ -72,4 +72,70 @@ class ChatService {
       return chatDocId;
     }
   }
+
+  ///Classe che permette l'eliminazione di un messaggio da parte di un utente
+  ///l'eliminazione avviene direttamente nel database ed ha validità per tutte
+  ///e due gli utenti
+  ///
+  /// richiede [chatID] id della chat e [messaggioID] id del messaggio da cancellare
+  ///
+  Future<void> cancellaMessaggio(String chatID, String messaggioID) async {
+    try {
+      ///prendo il riferimento alla chat dove sta il messaggio
+      var riferimentoChat = _firestore.collection('chats').doc(chatID);
+
+      ///recupero la referenza alla collezione messaggi dato [chatId]
+      var messaggi = _firestore.collection('chats').doc(chatID).collection('messages');
+
+      ///ultimi 2 messaggi a livello temporale
+      var ultimiMessaggi = await messaggi.orderBy('timestamp', descending: true).limit(2).get();
+
+      ///se l'ultimo messaggio ha id pari a quello da cancellare allora aggiorno
+      ///l'ultimo messaggio della chat
+      if (ultimiMessaggi.docs.first.id == messaggioID)
+      {
+        ///se esiste un penultimo messaggio allora lo aggiorno come ultimo messaggio
+        if(ultimiMessaggi.docs.length>=2)
+        {
+          ///ottengo i dati dei pittogrammi dell'ultimo messaggio
+          Map<String, dynamic> dati = ultimiMessaggi.docs.last.data();
+
+          ///recupero i pittogrammi dell'ultimo messaggio, il timestamp ultimo e
+          ///l'url dell'ultimo pittogramma
+          String urlImmagine="";
+          List<dynamic> pittogrammi = dati['pictograms'] ?? [];
+          String descrizione = pittogrammi.map((p) => p['description'] ?? '').join(" ");
+          Timestamp dataPenultimo = dati['timestamp'] ?? Timestamp.now();
+          if (pittogrammi.isNotEmpty) urlImmagine = pittogrammi.first['imageUrl'] ?? "";
+
+
+          ///aggiorno i dati sull'ultimo messaggio
+          await riferimentoChat.update({
+            'lastMessageTime': dataPenultimo,
+            'lastMessageData': {
+              'description': descrizione,
+              'imageUrl': urlImmagine,
+            }
+          });
+        }
+        ///se non esiste il penultimo messaggio allora pongo come ultimo messaggio nuova chat
+        else
+        {
+          await riferimentoChat.update({
+            'lastMessageTime': FieldValue.serverTimestamp(),
+            'lastMessageData': {
+              'description': 'Nuova chat',
+              'imageUrl': '',
+            },
+          });
+        }
+      }
+
+      ///cancellazione del messaggio selezionato
+      await _firestore.collection('chats').doc(chatID).collection('messages').doc(messaggioID).delete();
+
+    } catch (e) {
+      print("Errore di eliminazione: $e");
+    }
+  }
 }

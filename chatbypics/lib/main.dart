@@ -25,7 +25,7 @@ class MyApp extends StatelessWidget {
       builder: (context, authSnapshot) {
         final User? user = authSnapshot.data;
 
-        // Se non c'è utente, mostra tema base (Login)
+        /// Se non c'è utente, mostra tema base (Login)
         if (user == null) {
           return _buildMaterialApp(ThemeMode.light, const AuthPage());
         }
