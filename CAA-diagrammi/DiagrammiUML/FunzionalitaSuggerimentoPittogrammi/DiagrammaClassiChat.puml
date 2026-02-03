@@ -1,0 +1,481 @@
+@startuml DiagrammaClassiChat
+
+class ChatPage<<Player>>
+{
+    +chatID: String{ReadOnly};
+    +chatName: String{ReadOnly};
+    +chatOwnerId: String{ReadOnly};
+    +ruolo: RuoloChat{ReadOnly} //ruolo concreto;
+    +createState(): ChatPageState;
+
+}
+class ChatPageState{
+    -auth: FirebaseAuth{ReadOnly};
+
+    +initState():void;
+    +build(BuildContext context): Widget;
+}
+
+interface RuoloChat<<Role>>
+{
+    +buildSchermataComposizioneMessaggi(BuildContext context, String chatID, User utente):  Widget;
+    +buildAppBar(String testo): PreferredSizeWidget;
+    +gestisciEliminazione(BuildContext context,String chatID,String messageID,Timestamp timestamp,bool isMe): void;
+}
+
+class RuoloOsservatore<<Concrete role>>
+{
+}
+
+class RuoloScrittore<<Concrete role>>
+{
+}
+
+
+class ComposizioneMessaggio
+{
+    -composingMessage: List<Map<String,String>>[0..*] {lista pittogrammi};
+    -invio: VoidCallback {ReadOnly, funzione invio};
+    -rimozione: Function {ReadOnly, funizone rimozione in ingresso int};
+
+    +build(BuildContext context): Widget;
+}
+
+abstract StileComposizioneMessaggio{
+    ...
+}
+
+abstract class BannerEliminazione{
+    {static} +mostraBanner(BuildContext context): bool;
+}
+
+abstract class StileEliminazione{
+    ...
+}
+
+class BottoneAlert{
+    +final risposta bool;
+
+    +build(BuildContext context): Widget;
+}
+
+abstract StileBottoneAlert{
+    ...
+}
+
+class GestorePermessi{
+    -database: FirebaseFirestore {ReadOnly};
+
+    +recuperaCategorie(String id): <List<String>>[0..*]
+}
+class GestoreRichiestePreferenze<<Delegator>>{
+    
+    +caricaPreferenze(String userId): PreferenzeChat; //DELEGATION METHOD
+}
+
+class GrigliaCategorie{
+    -visibleCategories: List<Map<String,String>>[0..*] {ReadOnly};
+    -selezionato: Function{ReadOnly, funzione selzione categoria ingresso nome: String identificatiovo String};
+
+    +build(BuildContext context): Widget;
+}
+
+class StileGrigliaCategorie{
+    ...
+}
+
+class GrigliaDeiSimboli{
+
+    -simboli: List<Map<String,String>>[0..*] {ReadOnly};
+    -selezionato: Function{ReadOnly, funzione selziona pittogramma ingresso url: String descrizione: String};
+
+    +build(BuildContext context): Widget;
+}
+
+class StileGrigliaDeiSimboli{
+    ...
+}
+
+class InputArea{
+
+    -isPickerVisible: bool;
+    -cliccato: VoidCallback{ReadOnly, funzione se cliccato};
+
+    +build(BuildContext context): Widget;
+}
+
+class StileInputArea{
+    ...
+}
+
+class PersistentPicker{
+
+    -mostraCategorie: bool;
+    -isLoading: bool=false;
+    -currentCategoryName String="";
+    -searchController: TextEditingController;
+    -visibleCategories: List<Map<String,String>>[0..*];
+    -vaiACategorie: VoidCallback{ReadOnly, funzione per tornare a categorie};
+    -ricerca: VoidCallback{ReadOnly, funzione ricerca pittogramma};
+    -chiudi: VoidCallback{ReadOnly, funzione che chiude}
+    -clickCategorie: Function{ReadOnly, funzione se si clicca pittogramma url:String destrizione:String}
+
+    +build(BuildContext context): Widget;
+    -buildBarraRicerca(): Widget;
+    -buildCategoriesGrid(): Widget;
+    -buildSymolsGrid(): Widget;
+}
+
+class SchermataErroreChat{
+    +build(BuildContext context): Widget;
+
+}
+
+class SingoloMessaggio{
+    
+    -isMe: bool{ReadOnly};
+    -messaggioId: String{ReadOnly};
+    -timeStampMessaggio: Timestamp{ReadOnly};
+    -fullSentence: String{ReadOnly};
+    -pictograms: List<dynamic>[1..*]{ReadOnly};
+    -itemsPerRow: int{ReadOnly};
+    -cliccato: Function{ReadOnly, funzione lettura vocale testo: String};
+    -premuto: Function{ReadOnly, funzione elimina chat},
+    
+    +build(BuildContext context): Widget;
+    -getItemsPerRow(): int;
+
+}
+
+abstract class StileChat{
+    ...
+}
+
+
+class SingoloSuggerimento
+{
+  -url:String{ReadOnly}
+  -funzioneAggiornaSuggerimenti: VoidCallback{ReadOnly, funzione aggiorna suggerimenti}
+
+  +build(context: BuildContext): Widget
+}
+
+class Suggerimenti
+{
+    -dati: String[0..3]
+    +selezionato: Function{ReadOnly, funzione aggiornamento suggerimenti url:String}
+
+    +build(context: BuildContext): Widget
+
+}
+
+abstract StileSingoloSuggerimento
+{
+    {static}attributiStile{ReadOnly}
+    ...
+}
+abstract StileSuggerimenti
+{
+    {static}attributiStile{ReadOnly}
+    ...
+}
+
+
+class StileSingoloMessaggio{
+    ...
+}
+
+abstract class CategoriePittogrammi<<classe statica>>{
+    {static} +categories: List<Map<String,String>>[0..*]{ReadOnly};
+}
+
+class PreferenzeChat
+{
+    -gridSize: double=3.0 {ReadOnly};
+    -showLabels: bool=true {ReadOnly};
+    -autoRead: bool=false {ReadOnly};
+    -isDarkMode: bool=false {ReadOnly};
+
+    +preferenzeChat(bool gridSize, bool showLabels, bool autoRead,bool isDarkMode);
+    +preferenzeChat.dati(Map<String, dynamic> map)
+
+}
+
+class SezioneScrittura
+{
+    +chatId: String{ReadOnly};
+    +utente: User{ReadOnly};
+    +createState():SezioneScritturaState;
+}
+
+
+class SezioneScritturaState {
+ -composingMessage: List<Map<String, String>>[0..*]=[];
+  -isPickerVisible: bool=false;
+  -searchController: TextEditingController;
+  -currentSymbols: List<Map<String, String>>[0..*]=[];
+  -isLoading: bool=false;
+  -showingCategories: bool=true;
+  -currentCategoryName: String="";
+  -visibleCategories: List<Map<String, String>>[0..*]=[];
+
+
+  +initState() : void;
+  +build(context: BuildContext) : Widget;
+ 
+  -caricaPermessi(): void;
+  -aggiungiPittogramma(newURL: String, desc: String): void;
+  -handleSendMessage(): void;
+  -selectCategory(name: String, term: String) : void;
+  -performTextSearch(): void;
+  -backToCategories(): void;
+  
+  -buildSuggerimenti(): Widget;
+  -buildComposerPreview(): Widget;
+  -buildInputArea(): Widget;
+  -buildPersistentPicker(): Widget;
+}
+
+
+
+class SezioneLettura
+{
+    +chatId: String{ReadOnly};
+    +utenteProprietarioChat: String{ReadOnly};
+    +utenteCheVisualizza: String{ReadOnly};
+    +premutoElimina: Function{ReadOnly, funzione per elimiare messaggi, messageId: String, timestamp:Timestamp, isMe:bool}
+
+    +createState():SezioneLetturaState;
+}
+
+class SezioneLetturaState{
+
+    +initState(): void;
+
+    +build(BuildContext context): Widget;
+    -streamBuilder(): Widget;
+    -buildMessageItem(DocumentSnapshot doc): Widget;
+    -caricaPreferenze(): void;
+}
+
+class AvvisatoreSnackBar<<Singleton>>
+{
+
+    {static} -istanza: AvvisatoreSnackBar{ReadOnly};
+
+    -AvvisatoreSnackBar();
+    +{static} getIstance(): AvvisatoreSnackBar;
+
+    +risposta(String messaggio,int tempo): SnackBar;
+
+}
+
+class GestoreJson<<Singleton>>
+{
+    -{static}istanza: GestoreJson{ReadOnly}
+    -{static}nomeFile: String{ReadOnly}
+    -pittogrammiMap: Map<String, List<dynamic>> 
+
+    -GestoreJson() {metodo costruttore privato}
+    +{static} getIstance(): GestoreJson;
+
+    +leggiJson(): void
+    +aggiornamentoSuggerimenti(oldId: String,newURL:String): void
+    +suggerimentiDiImmagine(id: String): String[0..3]
+
+    -salvaInJson(): void
+    
+}
+
+class SintesiVocale<<Singleton>><<Delegator>>{
+    
+    {static} -istanza: SintesiVocale{ReadOnly}; 
+    -SintesiVocale();
+    {static}+getSintesiVocale();
+    +speak(String text):void; //DELEGATE METHOD
+    +stop(): void; //DELEGATE METHOD
+    -initTts(): void;
+
+}
+
+class FlutterTts<<Delegate>>
+{
+    ...
+}
+
+
+class ChatService{
+    
+    -auth: FirebaseAuth{ReadOnly};
+    -firestore: FirebaseFirestore{ReadOnly};
+
+    +sendPictogramMessage(): void;
+    +createOrGetChat(String friendUid): String;
+    +cancellaMessaggio(String chatID, String messaggioID): void;
+
+}
+
+class PictogramService{
+    -baseUrl: String{ReadOnly};
+    -imageBaseUrl: String{ReadOnly};
+    -blacklist: List<String>[0..*]{ReadOnly};
+
+    +searchPictograms(String query):<List<Map<String, String>>>;
+    +getDescrizione(String urlRic): String;
+}
+
+class PreferencesService<<Delegate>>{
+
+    {static}+keyDarkMode: String="isDarkMode";
+    {static}+keyShowLabels: String="showLabels";
+    {static}+keyAutoRead: String="autoReadMessages";
+    {static}+keyGridSize: String="gridSize";
+
+    +getUserPreferences(String userID): Map<String,dynamic>;
+    +updatePreference(String userID, String key, dynamic value): void;
+
+
+}
+
+class ChatListPage<<Player>>{
+    +osservatore: String? {ReadOnly};
+    +nomeCCN: String? {ReadOnly};
+    
+    +createState(): ChatListPageState;
+
+}
+
+class ChatListPageState{
+    -currentUserId: String;
+    -isSearching: bool=false;
+    -searchController: TextEditingController{ReadOnly};
+    -searchText: String="";
+    
+    +initState(): void;
+    +dispose():void;
+    +build(BuildContext context): Widget;
+}
+
+abstract StileChatListPage{
+    ...
+}
+
+interface RuoloLista<<Role>>{
+    +buildBottone(BuildContext context): Widget;
+    +getColoreBackground(): Color;
+    +getColoreIcone(): Color;
+    +getTestoIntestazione(String? nomeUtente): Text;
+    +getRuoloChatPage(): RuoloChat;
+}
+
+class RuoloListaMia<<Concrete role>>{
+
+}
+
+class RuoloListaTerzi<<Concrete role>>{
+
+}
+
+RuoloLista <|.. RuoloListaMia
+RuoloLista <|.. RuoloListaTerzi
+RuoloLista <--o ChatListPage
+ChatListPageState <.. ChatListPage: <<crea>>
+StileChatListPage <.. ChatListPageState: <<usa stili grafici>>
+
+
+RuoloChat <|.. RuoloScrittore
+
+RuoloChat <|.. RuoloOsservatore
+
+ChatPage o--> RuoloChat
+
+ChatPage ..> ChatPageState: <<crea>>
+
+InputArea ..> StileInputArea: <<usa stile grafico>>
+
+GrigliaDeiSimboli ..> StileGrigliaDeiSimboli: <<usa stile grafico>>
+
+GrigliaCategorie ..> StileGrigliaCategorie: <<usa stile grafico>>
+
+BottoneAlert ..> StileBottoneAlert: <<usa stile grafico>>
+
+ComposizioneMessaggio ..> StileComposizioneMessaggio: <<usa stile grafico>>
+
+ChatPageState ..> StileChat: <<usa stile grafico>>
+
+BannerEliminazione ..> StileEliminazione: <<usa stile grafico>>
+
+RuoloScrittore ..> SezioneScrittura: <<crea>>
+
+RuoloScrittore ..> BannerEliminazione: <<crea>>
+
+RuoloScrittore ..> AvvisatoreSnackBar: <<usa>>
+
+RuoloScrittore ..> ChatService: <<usa>>
+
+RuoloOsservatore ..> AvvisatoreSnackBar: <<usa>>
+
+SezioneScritturaState --> GestorePermessi
+
+SezioneScritturaState --> GestoreJson
+
+SezioneScritturaState --> ChatService
+
+SezioneScritturaState --> PictogramService
+
+SezioneScritturaState ..> Suggerimenti: <<crea>>
+
+SezioneScritturaState ..> ComposizioneMessaggio: <<crea>>
+
+SezioneScritturaState ..> InputArea: <<crea>>
+
+SezioneScritturaState ..> PersistentPicker: <<crea>>
+
+SezioneLetturaState --> GestoreRichiestePreferenze
+
+SezioneLetturaState --> PreferenzeChat
+
+SezioneLetturaState ..> SintesiVocale: <<usa>>
+
+SezioneLetturaState ..>"0..*" SingoloMessaggio: <<crea>>
+
+ChatPageState ..> SchermataErroreChat: <<crea>>
+
+ChatPageState ..> SezioneLettura: <<crea>>
+
+SezioneLettura ..> SezioneLetturaState: <<crea>>
+
+BannerEliminazione ..>"2" BottoneAlert: <<create>>
+
+GestoreRichiestePreferenze o--> PreferencesService
+
+PersistentPicker ..> GrigliaCategorie: <<create>>
+
+PersistentPicker ..> GrigliaDeiSimboli: <<create>>
+
+SingoloMessaggio --> PreferenzeChat
+
+Suggerimenti ..> "0..3" SingoloSuggerimento: <<create>>
+
+SingoloMessaggio ..> StileSingoloMessaggio: <<usa stile grafico>>
+
+SezioneScrittura ..> CategoriePittogrammi: <<usa>>
+
+SingoloSuggerimento ..> StileSingoloSuggerimento : <<usa stili grafici>>
+
+Suggerimenti ..>StileSuggerimenti : <<usa stili grafici>>
+
+SezioneScrittura ..> SezioneScritturaState : <<crea>>
+
+SintesiVocale o--> FlutterTts
+
+ChatListPage ..> ChatPage: <<crea>>
+ 
+
+
+
+
+
+
+
+@enduml

@@ -1,3 +1,5 @@
+import 'package:chatbypics/services/AvvisatoreSnackBar.dart';
+import 'package:chatbypics/screens/chat/RuoloScrittore.dart';
 import 'package:chatbypics/services/chat_service.dart';
 import 'package:chatbypics/screens/chatPage.dart'; // La pagina della chat singola
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -9,7 +11,7 @@ class NewChatPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final currentUid = FirebaseAuth.instance.currentUser?.uid;
+    final currentUid = FirebaseAuth.instance.currentUser!.uid;
 
     return Scaffold(
       appBar: AppBar(title: const Text("Seleziona Utente")),
@@ -58,13 +60,15 @@ class NewChatPage extends StatelessWidget {
                       Navigator.pushReplacement(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => ChatPage(chatID: chatId, chatName: name),
+                          builder: (_) => ChatPage(chatID: chatId, chatName: name, ruolo: RuoloScrittore(),chatOwnerID: currentUid),
                         ),
                       );
                     }
                   } catch (e) {
                     Navigator.pop(context); // Chiudi caricamento in caso di errore
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Errore: $e")));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      AvvisatoreSnackBar().risposta("Errore: $e", 4)
+                    );
                   }
                 },
               );

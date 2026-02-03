@@ -1,3 +1,4 @@
+import 'package:chatbypics/screens/ccn/StileAddCcnPage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart'; // Fondamentale per il trucco
@@ -11,122 +12,57 @@ class AddCcnPage extends StatefulWidget {
 }
 
 class _AddCcnPageState extends State<AddCcnPage> {
+  /// [_formKey] Chiave globale che identifica il modulo di registrazione. 
+/// Viene utilizzata per validare i campi di testo (nome, email, password) prima di inviare i dati a Firebase.
   final _formKey = GlobalKey<FormState>();
   
-  // Controller per i campi di testo
+  ///[_nameController] controller per l'inserimento del nome
   final TextEditingController _nameController = TextEditingController();
+  ///[_surnameController] controller per l'inserimento del cognome
   final TextEditingController _surnameController = TextEditingController();
+  ///[_emailController] controller per l'inserimento dell'email
   final TextEditingController _emailController = TextEditingController();
+  ///[_passwordController] controller per l'inserimento della password
   final TextEditingController _passwordController = TextEditingController();
   
+  ///[_isLoading] variabile per disabilitare il bottone dopo il primo click per la registrazione del ccn
+  ///serve per impedire che il tutor possa cliccare 10 volte il bottone, arrivando a registrare 10 ccn
   bool _isLoading = false;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Nuovo Utente CCN"),
-        backgroundColor: Colors.deepPurple.shade100,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const Text(
-                "Crea un account per il tuo assistito.\nLui dovrà solo fare il login.",
-                style: TextStyle(color: Colors.grey, fontSize: 16),
-              ),
-              const SizedBox(height: 20),
-
-              // CAMPO NOME
-              TextFormField(
-                controller: _nameController,
-                decoration: _inputDecoration("Nome"),
-                validator: (val) => val!.isEmpty ? "Inserisci il nome" : null,
-              ),
-              const SizedBox(height: 15),
-
-              // CAMPO COGNOME
-              TextFormField(
-                controller: _surnameController,
-                decoration: _inputDecoration("Cognome"),
-                validator: (val) => val!.isEmpty ? "Inserisci il cognome" : null,
-              ),
-              const SizedBox(height: 15),
-
-              // CAMPO EMAIL
-              TextFormField(
-                controller: _emailController,
-                decoration: _inputDecoration("Email"),
-                keyboardType: TextInputType.emailAddress,
-                validator: (val) => val!.contains("@") ? null : "Email non valida",
-              ),
-              const SizedBox(height: 15),
-
-              // CAMPO PASSWORD
-              TextFormField(
-                controller: _passwordController,
-                decoration: _inputDecoration("Password provvisoria"),
-                obscureText: true,
-                validator: (val) => val!.length < 6 ? "Minimo 6 caratteri" : null,
-              ),
-              const SizedBox(height: 30),
-
-              // BOTTONE REGISTRAZIONE
-              SizedBox(
-                height: 50,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.deepPurple,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                  ),
-                  onPressed: _isLoading ? null : _registerUser,
-                  child: _isLoading 
-                      ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text("Registra Utente CCN", style: TextStyle(fontSize: 18)),
-                ),
-              ),
-            ],
-          ),
-        ),
+      appBar: Stileaddccnpage.buildAppBar,
+      body: Stileaddccnpage.buildScrollView(
+        _formKey, 
+        _nameController, 
+        _surnameController, 
+        _emailController, 
+        _passwordController, 
+        _isLoading, 
+        _registerUser
       ),
     );
   }
 
-  // --- STILE CAMPI ---
-  InputDecoration _inputDecoration(String label) {
-    return InputDecoration(
-      labelText: label,
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-      filled: true,
-      fillColor: Colors.grey.shade50,
-    );
-  }
-
-  // --- LOGICA DI REGISTRAZIONE "SILENZIOSA" ---
+  ///[_registerUser] questo metodo registra in firebase l'utente, vengono salvati anche i dati del tutor associato al ccn
+  ///per consentirli di entrare nelle chat del ccn in modalità osservatore
   Future<void> _registerUser() async {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
 
-    // 1. Dati del Tutor attuale (noi)
     final String tutorId = FirebaseAuth.instance.currentUser!.uid;
 
     FirebaseApp? secondaryApp;
 
     try {
-      // 2. Creiamo un'istanza secondaria di Firebase
-      // Questo serve per creare l'utente SENZA sloggare il Tutor
+      //crea un'istanza secondaria di firebase per non fare uscire dall'account il tutor
       secondaryApp = await Firebase.initializeApp(
         name: 'SecondaryApp',
         options: Firebase.app().options,
       );
 
-      // 3. Creiamo l'utente sulla seconda istanza
       UserCredential userCredential = await FirebaseAuth.instanceFor(app: secondaryApp)
           .createUserWithEmailAndPassword(
             email: _emailController.text.trim(),
@@ -135,8 +71,6 @@ class _AddCcnPageState extends State<AddCcnPage> {
 
       String newUserId = userCredential.user!.uid;
 
-      // 4. Salviamo i dati su Firestore (DB principale)
-      // Qui aggiungiamo il ruolo 'CCN' e il 'tutorId' per collegarli
       await FirebaseFirestore.instance.collection('users').doc(newUserId).set({
         'uid': newUserId,
         'Nome': _nameController.text.trim(),
@@ -152,7 +86,7 @@ class _AddCcnPageState extends State<AddCcnPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Utente CCN creato con successo!")),
         );
-        Navigator.pop(context); // Torna indietro alla lista
+        Navigator.pop(context);
       }
 
     } on FirebaseAuthException catch (e) {
@@ -168,7 +102,6 @@ class _AddCcnPageState extends State<AddCcnPage> {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Errore: $e"), backgroundColor: Colors.red));
       }
     } finally {
-      // 5. PULIZIA: Cancelliamo l'app secondaria per liberare memoria
       await secondaryApp?.delete();
       if (mounted) setState(() => _isLoading = false);
     }

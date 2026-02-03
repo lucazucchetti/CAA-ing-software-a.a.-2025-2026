@@ -1,18 +1,40 @@
+import 'package:chatbypics/screens/chatList/RuoloLista.dart';
 import 'package:chatbypics/screens/chatPage.dart';
-import 'package:chatbypics/screens/newChatPage.dart'; // Assicurati di aver creato questo file (vedi sotto)
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class ChatListPage extends StatefulWidget {
-  const ChatListPage({super.key});
+
+  ///[osservatore] è l'id di chi sta osservando la chat(quindi il tutor)
+  ///può essere null, se è null allora la lista è dell'utente
+  ///
+  final String? osservatore;
+  ///[nomeCCN] nome del CCN del quale si stà vedendo la lista, può essere null
+  ///in questo caso allora è perchè non si sta vedendo la lista del ccn ma la propia
+  final String? nomeCCN;
+  ///[ruolo] RuoloLista è il ruolo che si assume in base a se si sta osservando una lista chat del
+  ///ccn oppure la propia, pattern player role
+  ///
+  final RuoloLista ruolo;
+
+  const ChatListPage({
+    super.key,
+    this.osservatore,
+    this.nomeCCN,
+    required this.ruolo,
+
+  });
 
   @override
   State<ChatListPage> createState() => _ChatListPageState();
 }
 
 class _ChatListPageState extends State<ChatListPage> {
-  final String currentUserId = FirebaseAuth.instance.currentUser!.uid;
+
+  ///[currentUserId] id di chi ha fatto l'accesso
+  ///
+  late String currentUserId;
 
   bool _isSearching = false; // Se stiamo cercando o no
   final TextEditingController _searchController = TextEditingController();
@@ -21,6 +43,10 @@ class _ChatListPageState extends State<ChatListPage> {
   @override
   void initState() {
     super.initState();
+
+
+    currentUserId = widget.osservatore ?? FirebaseAuth.instance.currentUser!.uid;
+
     // Ascoltiamo cosa scrive l'utente in tempo reale
     _searchController.addListener(() {
       setState(() {
@@ -51,9 +77,10 @@ class _ChatListPageState extends State<ChatListPage> {
                   hintStyle: TextStyle(color: Colors.grey),
                 ),
               )
-            : const Text("Le tue Chat", style: TextStyle(color: Colors.black)),
-            
-        backgroundColor: Colors.deepPurple.shade100,
+            :  (widget.ruolo.getTestoIntestazione(widget.nomeCCN)),
+
+        ///colore in base al ruolo
+        backgroundColor: widget.ruolo.getColoreBackground(),
         iconTheme: const IconThemeData(color: Colors.black), // Icone nere per contrasto
         
         actions: [
@@ -141,7 +168,7 @@ class _ChatListPageState extends State<ChatListPage> {
                   // ... (tutto il resto del tuo ListTile rimane uguale)
                   contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   leading: CircleAvatar(
-                    backgroundColor: Colors.deepPurple.shade200,
+                    backgroundColor: widget.ruolo.getColoreIcone(),
                     child: Text(friendName.isNotEmpty ? friendName[0].toUpperCase() : "?", 
                     style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                   ),
@@ -156,7 +183,8 @@ class _ChatListPageState extends State<ChatListPage> {
                     Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => ChatPage(chatID: chatId, chatName: friendName),
+                      builder: (_) => ChatPage(chatID: chatId, chatName: friendName, ruolo: widget.ruolo.getRuoloChatPage(), chatOwnerID: currentUserId),
+
                     ),
                     );
                   },
@@ -169,14 +197,7 @@ class _ChatListPageState extends State<ChatListPage> {
       ),
 
       // BOTTONE NUOVA CHAT
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // Naviga alla pagina di selezione contatti
-          Navigator.push(context, MaterialPageRoute(builder: (_) => const NewChatPage()));
-        },
-        backgroundColor: Colors.deepPurple,
-        child: const Icon(Icons.person_add, color: Colors.white),
-      ),
+      floatingActionButton: widget.ruolo.buildBottone(context),
     );
   }
 }

@@ -2,7 +2,7 @@ import 'package:chatbypics/screens/chat/PreferenzeChat.dart';
 import 'package:chatbypics/services/preferences_service.dart';
 
 ///[GestoreRichiestePreferenze] Classe usata per richiedere tramite PreferenceService
-///le impostazioni di un utente
+///le impostazioni di un utente, usa il DELEGATION PATTERN
 ///
 class GestoreRichiestePreferenze {
 
@@ -21,8 +21,5 @@ class GestoreRichiestePreferenze {
     return PreferenzeChat.dati(dati);
   }
 
-  /// Salva una preferenza specifica (passacarte verso il Service)
-  Future<void> updateSetting(String userId, String key, dynamic value) async {
-    await _service.updatePreference(userId, key, value);
-  }
+
 }
