@@ -32,6 +32,7 @@ dependencies:
     sdk: flutter
   # per andare a prendere i percorsi
   path_provider: ^2.1.2
+  flutter_tts: ^3.8.5
 
 
   # The following adds the Cupertino Icons font to your application.
@@ -61,7 +62,6 @@ flutter_launcher_icons:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
-  flutter_tts: ^3.8.5
   test_cov_console: ^0.2.2
 
 # For information on the generic Dart part of this file, see the
