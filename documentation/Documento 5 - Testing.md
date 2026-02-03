@@ -270,3 +270,6 @@ testWidgets('Mostra errori specifici per Email non valida e Password corta', (Wi
     expect(find.text('Minimo 6 caratteri'), findsOneWidget);
   });
 ```
+## Copertura
+I risultati del test di copertura sono riportati nella foto sottostante.
+![Risultati Copertura Test](/documentation/coverage_preview.png)
