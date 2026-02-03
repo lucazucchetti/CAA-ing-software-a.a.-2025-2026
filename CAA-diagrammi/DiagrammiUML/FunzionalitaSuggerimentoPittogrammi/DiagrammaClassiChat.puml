@@ -345,7 +345,7 @@ class ChatListPage<<Player>>{
 
 }
 
-class ChatListPageState<<Player>>{
+class ChatListPageState{
     -currentUserId: String;
     -isSearching: bool=false;
     -searchController: TextEditingController{ReadOnly};
