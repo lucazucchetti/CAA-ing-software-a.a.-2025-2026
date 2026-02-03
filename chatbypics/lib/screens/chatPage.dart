@@ -50,6 +50,15 @@ class ChatPage extends StatefulWidget {
 ///
 class _ChatPageState extends State<ChatPage> {
 
+  final PreferencesService _prefService = PreferencesService();
+  bool _isPickerVisible = false; // Controlla se la griglia è aperta
+  final List<Map<String, String>> _composingMessage = [];
+  double _gridSize = 3.0;
+  bool _showLabels = true;
+  final FlutterTts flutterTts = FlutterTts();
+  final double _ttsSpeed = 0.5; // Velocità normale (0.0 a 1.0)
+  bool _autoReadMessages = true;
+  @override
 
   ///[_auth] variabile che rappresenta l'istanza del DB utilizzato
   ///
