@@ -81,8 +81,8 @@ class MyApp extends StatelessWidget {
         ),
         // Colori specifici per i widget in dark mode
         switchTheme: SwitchThemeData(
-          thumbColor: MaterialStateProperty.all(Colors.deepPurpleAccent),
-          trackColor: MaterialStateProperty.all(Colors.grey.shade700),
+          thumbColor: WidgetStateProperty.all(Colors.deepPurpleAccent),
+          trackColor: WidgetStateProperty.all(Colors.grey.shade700),
         ),
       ),
       home: homeWidget,

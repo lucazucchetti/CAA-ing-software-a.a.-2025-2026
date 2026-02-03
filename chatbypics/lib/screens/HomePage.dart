@@ -11,7 +11,9 @@ Classe che gestisce la barra per navigare tra le varie pagine all'interno
 dell'applicazione
 */ 
 class Homepage extends StatefulWidget{
-  const Homepage({super.key});
+  final String? testRole;
+  const Homepage({super.key, this.testRole});
+  
 
   @override
   State<Homepage> createState() => _HomepageState();
@@ -25,8 +27,21 @@ class _HomepageState extends State<Homepage> {
   @override
   void initState() {
     super.initState();
-    _checkUserRole();
-    _checkProfiloStatus();
+
+    /**
+     * Modifica che consente ai casi di test di non effettuare la chiamata a firebase facendo fallire il test.
+     * Quando facciamo i test viene passato un ruolo fittizio per consentire di testare anche questa parte di codice
+     */
+    if (widget.testRole != null) {
+      setState(() {
+        _userRole = widget.testRole!;
+        _isLoading = false; // Smettiamo di caricare subito
+      });
+    } else {
+      // Comportamento normale (App reale) -> Chiama Firebase
+      _checkUserRole();
+      _checkProfiloStatus();
+    }
   }
 
   // 1. CONTROLLIAMO IL RUOLO SU FIREBASE
@@ -98,7 +113,15 @@ class _HomepageState extends State<Homepage> {
 
     // --- BLOCCO SOLO PER TUTOR ---
     if (_userRole == "Tutor") {
-      pages.add(const CCNManagePage()); // La pagina dello screenshot (Gestione Utenti)
+      /**
+       * Modifica per fare una pagina finta se stiamo facendo un test
+       */
+      if (widget.testRole != null) {
+        pages.add(const Center(child: Text("Gestione CCN Finta")));
+      } else {
+        pages.add(const CCNManagePage());
+      }
+      
       navItems.add(
         const BottomNavigationBarItem(
           icon: Icon(Icons.group_outlined), 
@@ -110,7 +133,15 @@ class _HomepageState extends State<Homepage> {
     // -----------------------------
 
     // Aggiungiamo le Impostazioni (visibili a tutti)
-    pages.add(const SettingPage()); // Sostituisci col nome della tua pagina impostazioni
+    /**
+     * Modofica per fare la pagina finta quando facciamo i test
+     */
+    if (widget.testRole != null) {
+       pages.add(const Center(child: Text("Settings Finta")));
+    } else {
+       pages.add(const SettingPage());
+    }
+    
     navItems.add(
       const BottomNavigationBarItem(
         icon: Icon(Icons.settings_outlined), 
