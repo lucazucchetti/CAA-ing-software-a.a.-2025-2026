@@ -1,76 +1,129 @@
 @startuml DiagrammaSequenzaEliminazioneMessaggio
+!pragma teoz true
 
 actor Utente
-participant Messaggio
-participant SnackBar
 participant Console
-participant BannerEliminazione
+participant Messaggio
 participant RuoloChat
+participant BannerEliminazione
+participant SnackBar
 participant ChatService
 database DatabaseMessaggi
 
+
 Utente->Messaggio: PremeMessaggio
-Messaggio->RuoloChat: MessaggioPremuto(messaggio)
+
+Messaggio->RuoloChat: MessaggioPremuto(datiMessaggio)
+activate RuoloChat
 
 alt Ruolo chat è Scrittore
 
     RuoloChat->RuoloChat: Controllo proprietà del messaggio
 
     opt Messaggio inviato dall'Utente che ha premuto
-
         RuoloChat->RuoloChat: Controlla timestamp invio
 
         alt Messaggio inviato meno di 30s fa 
-            RuoloChat->BannerEliminazione: Chiedi se eliminare il messaggio 
+        
+            create BannerEliminazione
+            RuoloChat ->> BannerEliminazione: <<CREATE>> 
+            
             BannerEliminazione->Utente: Richiedi se eliminare
+            activate BannerEliminazione
 
-            Utente->BannerEliminazione: RispostaEliminazione
-            BannerEliminazione->RuoloChat: inviaRisposta
+            Utente-->BannerEliminazione: RispostaEliminazione(risposta)
+            BannerEliminazione-->RuoloChat: inviaRisposta
+            
+           
+            RuoloChat->> BannerEliminazione: <<DESTROY>>
+            deactivate BannerEliminazione
+            destroy BannerEliminazione
 
             opt Elimina
                 RuoloChat->ChatService: EliminaMessaggio(messaggio)
+                activate ChatService
 
                 ChatService->DatabaseMessaggi: Chiedi riferimento alla Chat
-
+                activate DatabaseMessaggi
+                deactivate DatabaseMessaggi
+                
                 ChatService->DatabaseMessaggi: Chiedi gli ultimi 2 messaggi inviati in chat
+                activate DatabaseMessaggi
+                deactivate DatabaseMessaggi
 
-                opt Messaggio da elimiare è l'ultimo della chat
-
+                opt Messaggio da eliminare è l'ultimo della chat
                     alt esiste un penultimo messaggio
-                        ChatService->ChatService: imposta come ultimo messaggio il penultimo
-                        ChatService->DatabaseMessaggi: imposta ultimo messaggio chat il penultimo
+                        ChatService->ChatService: imposta come ultimo msg il penultimo
+                        ChatService->DatabaseMessaggi: imposta ultimo msg chat il penultimo
+                        
+                        activate DatabaseMessaggi
+                        DatabaseMessaggi->DatabaseMessaggi: aggiorna db
+                        deactivate DatabaseMessaggi
                     else 
-                        ChatService->DatabaseMessaggi: imposta come utimo messaggio Nuova Chat 
+                        ChatService->DatabaseMessaggi: imposta ultimo msg "Nuova Chat" 
+                        
+                        activate DatabaseMessaggi
+                        DatabaseMessaggi->DatabaseMessaggi: aggiorna db
+                        deactivate DatabaseMessaggi
                     end
                 end
 
-            
-    
                 ChatService->DatabaseMessaggi: Elimina il messaggio
 
-                RuoloChat->SnackBar: Manda Risposta Eliminazione
-
-                SnackBar->Utente: Avvisa Eliminazione effettuata
+                activate DatabaseMessaggi
+                DatabaseMessaggi->DatabaseMessaggi: aggiorna db
+                deactivate DatabaseMessaggi
 
                 break errore eliminazione
-                    ChatService->Console: StampaErrore
+                    DatabaseMessaggi-->ChatService: Messaggio non Eliminato(errore)
+                    ChatService-->Console: StampaErrore
+                    activate Console
                     Console->Console: MostraErrore
+                    deactivate Console
                 end
+
+                DatabaseMessaggi-->ChatService :Messaggio Eliminato
+                ChatService-->RuoloChat: Messaggio Eliminato
+                deactivate ChatService
+
+                
+                create SnackBar
+                activate SnackBar
+                RuoloChat->> SnackBar: <<CREATE>>
+                {start1} SnackBar-->Utente: Avvisa Eliminazione effettuata
+                {end1} RuoloChat ->> SnackBar : <<DESTROY>>
+                deactivate SnackBar
+                destroy SnackBar
+                {start1} <-> {end1}: dopo 3 sec
+                
+
             end
 
         else
-            RuoloChat->SnackBar: avvisa impossibile eliminare per tempo scad
-            SnackBar->Utente: mostra impossibilità eliminazione per tempo scaduto
+            create SnackBar
+            activate SnackBar
+            RuoloChat->> SnackBar: <<CREATE>>
+            RuoloChat-->SnackBar: avvisa impossibile eliminare (tempo scaduto)
+            {start2} SnackBar-->Utente: mostra impossibilità eliminazione
+            {end2} RuoloChat ->> SnackBar: <<DESTROY>>
+            deactivate SnackBar
+            destroy SnackBar
 
+            {start2} <-> {end2}: dopo 3 sec
         end
         
     end 
 else
-    RuoloChat->SnackBar: Avvisa Non si possono eliminare messaggi
-    SnackBar->Utente: Avvisa solo modalità lettura
+    create SnackBar
+    RuoloChat->> SnackBar: <<CREATE>>
+    RuoloChat-->SnackBar: Avvisa Non si possono eliminare messaggi
+    {start3} SnackBar-->Utente: Avvisa solo modalità lettura
+    {end3} RuoloChat ->> SnackBar : <<DESTROY>>
+    destroy SnackBar
+    deactivate RuoloChat
+
+    {start3} <-> {end3}: dopo 3 sec
 
 end
-
-
 
 @enduml
