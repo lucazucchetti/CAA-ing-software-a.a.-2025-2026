@@ -2,7 +2,7 @@
 start
 repeat
 repeat
-:attendi nuovo pittogramma inserito; <<timeEvent>>
+:attendi nuovo pittogramma inserito(time event); <<timeEvent>>
 repeat while(esisteva un pittogramma inserito precedentemente al nuovo?) is (no) not (yes)
     :prendi id pittogramma precedente;
     :prendi URL pittogramma nuovo;

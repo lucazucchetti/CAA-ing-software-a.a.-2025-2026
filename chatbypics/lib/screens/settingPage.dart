@@ -1,3 +1,4 @@
+import 'package:chatbypics/screens/setting/StileSettingPage.dart';
 import 'package:chatbypics/services/auth.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -12,13 +13,20 @@ class SettingPage extends StatefulWidget {
 
 class _SettingPageState extends State<SettingPage> {
   final PreferencesService _prefService = PreferencesService();
+  ///[user] variabile che salva che l'utente per salvare le modifiche nel documento associato all'utente nel DB
   final User? user = Auth().currentUser;
 
+  ///[_isDarkMode] impostazione default del tema dell'applicazione
   bool _isDarkMode = false;
-  bool _showLabels = true;
-  bool _autoReadMessages = true;
-  double _gridSize = 3.0; // Valore indicativo per lo slider
 
+  ///[_showLabels] impostazione default per mostrare le etichette descrittive sotto ai pittogrammi
+  bool _showLabels = true;
+
+  ///[_autoReadMessages] impostazione default per la lettura automatica dei pittogrammi
+  bool _autoReadMessages = true;
+
+  ///[_gridSize] impostazione default per la grandezza della griglia dei pittogrammi
+  double _gridSize = 3.0; // Valore indicativo per lo slider
 
 
   @override
@@ -26,12 +34,12 @@ class _SettingPageState extends State<SettingPage> {
     super.initState();
     _initPreferences(); // Carica le impostazioni all'avvio
   }
-  // Carica i dati usando il service
+  ///[_initPreferences] metodo che carica i dati usando il service
   void _initPreferences() async {
     if (user == null) return;
     var prefs = await _prefService.getUserPreferences(user!.uid);
 
-    // Aggiorna la UI solo se la pagina è ancora caricata
+    //aggiorna l'interfaccia solo in caso sia già carica [mounted]
     if (mounted) {
       setState(() {
         if (prefs.containsKey(PreferencesService.keyDarkMode)) {
@@ -49,149 +57,46 @@ class _SettingPageState extends State<SettingPage> {
       });
     }
   }
-  // Funzione helper per aggiornare UI e Database insieme
+  ///[_updateVal] Metodo per aggiornare contemporaneamente interfaccia e firebase DB
   void _updateVal(String key, dynamic value) {
-    // Aggiorna UI locale
     setState(() {
       if (key == PreferencesService.keyShowLabels) _showLabels = value;
       if (key == PreferencesService.keyGridSize) _gridSize = value;
       if (key == PreferencesService.keyAutoRead) _autoReadMessages = value;
       if (key == PreferencesService.keyDarkMode) _isDarkMode = value;
     });
-    // Salva su DB tramite Service
     if (user != null) {
       _prefService.updatePreference(user!.uid, key, value);
     }
   }
-
+  ///[build] costruisce la pagina, tutte le personalizzazioni grafiche sono realizzate
+  ///nella classe [StileSettingPage]
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Impostazioni"),
-        backgroundColor: Colors.deepPurple.shade50,
-      ),
+      appBar: StileSettingPage.buildAppBar,
       body: ListView(
         children: [
-          //  SEZIONE PROFILO
-          _buildSectionHeader("Profilo"),
-          ListTile(
-            leading: CircleAvatar(
-              backgroundColor: Colors.deepPurple,
-              child: Text(user?.email?.substring(0, 1).toUpperCase() ?? "U", style: const TextStyle(color: Colors.white)),
-            ),
-            title: Text(user?.email ?? "Utente"),
-            subtitle: const Text("Tocca per modificare il profilo"),
-            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-            onTap: () {
-              // TODO: Naviga a pagina modifica profilo
-            },
-          ),
+          StileSettingPage.buildSettingProfilo(user?.email?.substring(0, 1).toUpperCase() ?? "U", user?.email ?? "Utente"),
 
           const Divider(),
 
-          //  SEZIONE ACCESSIBILITÀ CAA
-          _buildSectionHeader("Accessibilità CAA"),
-
-          // Switch Etichette
-          SwitchListTile(
-            title: const Text("Mostra testo sotto i simboli"),
-            subtitle: const Text("Aiuta l'associazione immagine-parola"),
-            value: _showLabels,
-            activeThumbColor: Colors.deepPurple,
-              onChanged: (val) => _updateVal(PreferencesService.keyShowLabels, val),
-          ),
-
-          // Slider Grandezza Griglia
-          ListTile(
-            title: const Text("Grandezza Griglia Simboli"),
-            subtitle: Text("Dimensione attuale: ${_gridSize.toInt()}"),
-          ),
-          Slider(
-            value: _gridSize,
-            min: 1,
-            max: 5,
-            divisions: 4,
-            label: _gridSize.toInt().toString(),
-            activeColor: Colors.deepPurple,
-            onChanged: (val) => _updateVal(PreferencesService.keyGridSize, val),
-          ),
+          StileSettingPage.buildSettingAccessibilita(_showLabels, (val) => _updateVal(PreferencesService.keyShowLabels, val), _gridSize, (val) => _updateVal(PreferencesService.keyGridSize, val)),
+          
+          const Divider(),
+          StileSettingPage.buildSettingSintesiVocale(_autoReadMessages, (val) => _updateVal(PreferencesService.keyAutoRead, val)),
 
           const Divider(),
 
-          // SEZIONE VOCALE
-          _buildSectionHeader("Sintesi Vocale"),
-          SwitchListTile(
-            title: const Text("Lettura Automatica"),
-            subtitle: const Text("Leggi i messaggi appena arrivano"),
-            value: _autoReadMessages,
-            activeThumbColor: Colors.deepPurple,
-            onChanged: (val) => _updateVal(PreferencesService.keyAutoRead, val),
-          ),
-
-          ListTile(
-            title: const Text("Velocità Voce"),
-            trailing: DropdownButton<String>(
-              value: "Normale",
-              items: <String>['Lenta', 'Normale', 'Veloce'].map((String value) {
-                return DropdownMenuItem<String>(
-                  value: value,
-                  child: Text(value),
-                );
-              }).toList(),
-              onChanged: (_) {
-                // TODO: Implementa logica TTS
-              },
-            ),
-          ),
+          StileSettingPage.buildSettingAppSistema(_isDarkMode, (val) => _updateVal(PreferencesService.keyDarkMode, val)),
 
           const Divider(),
 
-          // SEZIONE SISTEMA
-          _buildSectionHeader("App & Sistema"),
-          SwitchListTile(
-            secondary: const Icon(Icons.dark_mode),
-            title: const Text("Modalità Scura"),
-            value: _isDarkMode,
-            onChanged: (val) => _updateVal(PreferencesService.keyDarkMode, val),
-          ),
-
-          const Divider(),
-
-          //  TASTO LOGOUT
-          Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: ElevatedButton.icon(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red.shade100,
-                foregroundColor: Colors.red,
-                elevation: 0,
-              ),
-              icon: const Icon(Icons.logout),
-              label: const Text("Disconnetti"),
-              onPressed: () async {
-                await Auth().signOut();
-                // AuthPage gestirà il cambio di stato grazie allo StreamBuilder nel main
-              },
-            ),
-          ),
+          StileSettingPage.tastoLogout(() => Auth().signOut()),
         ],
       ),
     );
   }
 
-  // Widget helper per i titoli delle sezioni
-  Widget _buildSectionHeader(String title) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-      child: Text(
-        title.toUpperCase(),
-        style: TextStyle(
-          color: Colors.deepPurple.shade700,
-          fontWeight: FontWeight.bold,
-          fontSize: 13,
-        ),
-      ),
-    );
-  }
+  
 }

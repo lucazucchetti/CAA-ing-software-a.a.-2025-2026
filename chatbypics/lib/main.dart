@@ -1,4 +1,5 @@
 import 'package:chatbypics/screens/authPage.dart';
+import 'package:chatbypics/screens/verifyEmailPage.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart'; // Importa Firestore
 import 'package:firebase_auth/firebase_auth.dart';
@@ -29,7 +30,10 @@ class MyApp extends StatelessWidget {
         if (user == null) {
           return _buildMaterialApp(ThemeMode.light, const AuthPage());
         }
-
+        ///se l'utente non ha ancora verificato l'email
+        if(!user.emailVerified){
+          return _buildMaterialApp(ThemeMode.light, const VerifyEmailPage());
+        }
         // Se c'è utente, ascoltiamo le sue preferenze su Firestore
         return StreamBuilder<DocumentSnapshot>(
           stream: FirebaseFirestore.instance.collection('users').doc(user.uid).snapshots(),

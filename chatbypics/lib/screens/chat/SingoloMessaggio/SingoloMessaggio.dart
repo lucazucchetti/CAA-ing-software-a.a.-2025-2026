@@ -32,10 +32,6 @@ class SingoloMessaggio extends StatelessWidget {
   ///
   final PreferenzeChat impostazioni;
 
-  ///[itemsPerRow] numero di pittogrammi a riga
-  ///
-  final int itemsPerRow;
-
   ///[cliccato] funzione da eseguire quando è cliccato una volta il messaggio
   ///(lettura vocale)
   ///
@@ -56,7 +52,6 @@ class SingoloMessaggio extends StatelessWidget {
     required this.fullSentence,
     required this.pictograms,
     required this.impostazioni,
-    required this.itemsPerRow,
     required this.cliccato,
     required this.premuto,
 
@@ -95,7 +90,7 @@ class SingoloMessaggio extends StatelessWidget {
               children: pictograms.map((pic) {
 
                 double totalWidth = MediaQuery.of(context).size.width * 0.7;
-                double itemWidth = (totalWidth / itemsPerRow) - 12;
+                double itemWidth = (totalWidth / _getItemsPerRow()) - 12;
                 return Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -110,5 +105,18 @@ class SingoloMessaggio extends StatelessWidget {
           ),
         )
     );
+  }
+
+  ///[_getItemsPerRow] metodo che permette di calcolare quanti pittogrami in una riga ci possono
+  ///stare date le impostazioni preferenziali dell'utente
+  ///
+  int _getItemsPerRow(){
+
+    int num;
+
+    num = impostazioni.gridSize.toInt();
+    if (num < 1) num = 1;
+
+    return num;
   }
 }

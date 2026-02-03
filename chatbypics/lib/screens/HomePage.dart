@@ -1,4 +1,5 @@
 import 'package:chatbypics/screens/ccnManagePage.dart';
+import 'package:chatbypics/screens/chatList/RuoloListaMia.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -97,15 +98,9 @@ class _HomepageState extends State<Homepage> {
 
     // 2. COSTRUIAMO LE LISTE IN BASE AL RUOLO
     // Lista delle Pagine
-    /**
-     * Modifica per i test per non fare la chiamata a firebase
-     */
-    List<Widget> pages;
-    if (widget.testRole != null) {
-      pages = [ const Center(child: Text("Chat List Finta")) ];
-    } else {
-      pages = [ const ChatListPage() ];
-    }
+    List<Widget> pages = [
+      ChatListPage(ruolo: RuoloListaMia()), // Indice 0: Sempre visibile
+    ];
 
     // Lista dei Bottoni
     List<BottomNavigationBarItem> navItems = [

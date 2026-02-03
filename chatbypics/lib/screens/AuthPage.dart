@@ -1,3 +1,5 @@
+import 'package:chatbypics/screens/Authentication/StileAuthPage.dart';
+import 'package:chatbypics/screens/setting/StileSettingPage.dart';
 import 'package:chatbypics/services/auth.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -10,14 +12,21 @@ class AuthPage extends StatefulWidget{
 }
 
 class _AuthPageState extends State<AuthPage> {
-  // Controller per l'inserimento del testo
+  ///[_email] controller per l'inserimento dell'email
   final TextEditingController _email = TextEditingController();
+  ///[_password] controller per l'inserimento della password
   final TextEditingController _password = TextEditingController();
+  ///[_name] controller per l'inserimento del nome
   final TextEditingController _name = TextEditingController();
+  ///[_surname] controller per l'inserimento del cognome
   final TextEditingController _surname = TextEditingController();
 
+  ///[isLogin] flag per decidere che pagina restituire
   bool isLogin = false;
+  ///[isTutor] flag per registrare la persona come tutor, se la spunta è disattivata,
+  ///l'utente viene registrato come COMUNICATION PARTNER 
   bool isTutor = false; // Variabile per gestire la spunta del Tutor
+  ///[obscurePassword] flag per oscurare la password nella fase di inserimento
   bool obscurePassword = true; // Inizia come 'true' (nascosta)
 
   Future<void> signIn() async{
@@ -35,8 +44,6 @@ class _AuthPageState extends State<AuthPage> {
       } else if (e.code == 'wrong-password') {
         errorMessage = "Password errata.";
       } else if (e.code == 'invalid-credential') {
-        // Nota: Per sicurezza, le nuove versioni di Firebase spesso usano 
-        // questo codice generico invece di dire esplicitamente "utente non trovato"
         errorMessage = "Email o password errati (o utente non trovato).";
       }
 
@@ -53,8 +60,6 @@ class _AuthPageState extends State<AuthPage> {
 
   Future<void> createUser() async{
     try{
-      // Chiamata aggiornata con i nuovi parametri (Nome, Cognome, Ruolo)
-      // Assicurati che il tuo file auth.dart sia aggiornato come discusso prima!
       await Auth().createUserWithEmailAndPassword(
         email: _email.text.trim(), 
         password: _password.text.trim(),
@@ -62,6 +67,7 @@ class _AuthPageState extends State<AuthPage> {
         cognome: _surname.text.trim(),
         isTutor: isTutor,
       );
+      
     } on FirebaseAuthException catch (e) {
       print("Errore Registrazione: $e");
     }
@@ -76,11 +82,8 @@ class _AuthPageState extends State<AuthPage> {
         );
         return;
       }
-      
-      // Chiama la funzione nel service Auth
       await Auth().sendPasswordResetEmail(email: _email.text.trim());
       
-      // Conferma all'utente
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Link inviato! Controlla la tua email.")),
       );
@@ -94,118 +97,38 @@ class _AuthPageState extends State<AuthPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('ChatByPics'),
-      ),
-      // Usiamo SingleChildScrollView per evitare errori quando si apre la tastiera
-      body: SingleChildScrollView( 
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            // SEZIONE REGISTRAZIONE: Mostra Nome e Cognome solo se non è login
-            if (!isLogin) ...[
-              TextField(
-                controller: _name,
-                decoration: const InputDecoration(label: Text('Nome')),
-              ),
-              const SizedBox(height: 10),
-              TextField(
-                controller: _surname,
-                decoration: const InputDecoration(label: Text('Cognome')),
-              ),
-              const SizedBox(height: 10),
-            ],
-
-            // SEZIONE COMUNE: Email e Password
-            TextField(
-              controller: _email,
-              decoration: const InputDecoration(label: Text('Email')),
-            ),
-            const SizedBox(height: 10),
-            TextField(
-              controller: _password,
-              obscureText: obscurePassword, 
-              decoration: InputDecoration(
-                label: const Text('Password'),
-                // Aggiungi l'icona a destra (Suffix Icon)
-                suffixIcon: IconButton(
-                  icon: Icon(
-                  // Cambia icona in base allo stato: Occhio aperto o sbarrato
-                  obscurePassword ? Icons.visibility : Icons.visibility_off,
-                  ),
-                  onPressed: () {
-                    // Quando clicchi, inverti il valore (da vero a falso e viceversa)
-                    setState(() {
-                      obscurePassword = !obscurePassword;
-                    });
-                  },
-                ),
-              ),
-            ),
-
-            // CHECKBOX TUTOR: Visibile solo in registrazione
-            if (!isLogin)
-              CheckboxListTile(
-                title: const Text("Registrati come Tutor"),
-                value: isTutor,
-                onChanged: (bool? val) {
-                  setState(() {
-                    isTutor = val!;
-                  });
-                },
-                controlAffinity: ListTileControlAffinity.leading,
-                contentPadding: EdgeInsets.zero,
-              ),
-
-            const SizedBox(height: 20),
-            if(isLogin)
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton(
-                  onPressed: forgotPassword, 
-                  child: const Text(
-                    'Password Dimenticata?', 
-                    style: TextStyle(
-                      color: Colors.blue,
-                      fontWeight: FontWeight.bold
-                      ),
-                  ),
-                ),
-              ),
-
-            // BOTTONE AZIONE
-            ElevatedButton(
-              onPressed: (){
-                isLogin ? signIn() : createUser(); 
-              }, 
-              child: Text(
-                isLogin ? 'Accedi' : 'Registrati',
-                style: TextStyle(color: Colors.blue) 
-              )
-            ),
-
-            // TOGGLE LOGIN/REGISTRAZIONE
-            TextButton(
-              onPressed: (){
-                setState(() {
-                  isLogin = !isLogin;
-                  // Opzionale: pulisce i campi quando cambi modalità
-                  if (isLogin) {
-                     isTutor = false;
-                     _name.clear();
-                     _surname.clear();
-                  }
-                });
-              }, 
-              child: Text(
-                isLogin ? 'Non hai un account? Registrati' : 'Hai già un account? Accedi',
-                style: TextStyle(
-                  color: Colors.blue,
-                ),
-              )
-            ),
-          ]
-        ),
+      appBar: StileSettingPage.buildAppBar,
+      body: Stileauthpage.buildScrollView(
+        isLogin, 
+        isTutor, 
+        _name, 
+        _surname, 
+        _email, 
+        _password, 
+        obscurePassword, 
+        (){
+          setState(() {
+            obscurePassword = !obscurePassword;
+          });
+        }, 
+        (val){
+          setState(() {
+            isTutor=val;
+          });
+        }, 
+        forgotPassword, 
+        createUser, 
+        signIn, 
+        (){
+          setState(() {
+            isLogin = !isLogin;
+            if(isLogin){
+              isTutor=false;
+              _name.clear();
+              _surname.clear();
+            }
+          });
+        }
       ),
     );
   }
