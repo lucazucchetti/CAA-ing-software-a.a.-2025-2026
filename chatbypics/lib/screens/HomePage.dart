@@ -95,12 +95,16 @@ class _HomepageState extends State<Homepage> {
     if (_isLoading) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
-
+    List<Widget> pages = [];
     // 2. COSTRUIAMO LE LISTE IN BASE AL RUOLO
     // Lista delle Pagine
-    List<Widget> pages = [
-      ChatListPage(ruolo: RuoloListaMia()), // Indice 0: Sempre visibile
-    ];
+    if (widget.testRole != null) {
+      // Se siamo in test, mettiamo un widget stupido che non chiama Firebase
+      pages.add(const Center(child: Text("Chat List Finta"))); 
+    } else {
+      // Se siamo nell'app vera, carichiamo la ChatListPage che chiama Firebase
+      pages.add(ChatListPage(ruolo: RuoloListaMia()));
+    }
 
     // Lista dei Bottoni
     List<BottomNavigationBarItem> navItems = [

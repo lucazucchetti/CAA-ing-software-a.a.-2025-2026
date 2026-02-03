@@ -103,6 +103,7 @@ testWidgets('Cliccando su una tab la selezione cambia', (WidgetTester tester) as
     addTearDown(tester.view.resetPhysicalSize);
   });
 ```
+Nota: per poter effettuare il test della homepage, si è dovuto modificare il codice della homePage.dart per impedire di chiamare subito firebase, ma passandogli un ruolo fittizio viene simulato l'utilizzo dell'applicazione da quel tipo di utente bypassando completamente firebase, garantendo flessibilità per poter scrivere i casi di test.
 ### AuthPage.dart
 #### Test 1 
 Questo test va a verificare che alla prima apertura dell'apllicazione siano correttamente visualizzati i campi per la registrazione, che comprende: 
