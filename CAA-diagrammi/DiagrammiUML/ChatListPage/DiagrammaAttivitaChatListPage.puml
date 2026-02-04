@@ -1,0 +1,32 @@
+@startuml  DiagrammaAttivitaChatListPage
+
+start
+
+if(ID dell'utente di cui si osserva la lista è null?) then (yes)
+    :imposta IDSessione a quello dell'utente corrente;
+else (no)
+    :imposta IDSessione a IDUtente osservato; 
+endif 
+
+fork
+    :in base al ruoloLista costruisco la grafica;
+fork again
+    :ricreca chat di IDSessione;
+    if(errore nella ricerca?) then(yes)
+        :imposta errore e mostralo;
+        stop
+    else (no)
+        if(lista vuota?) then (yes)
+            :imposta "Aggiungi Nuova Chat";
+        else(no)
+            :crea singole anteprime chat;
+        endif
+    endif
+
+end fork
+
+:mostra Lista completa;
+
+stop
+
+@enduml

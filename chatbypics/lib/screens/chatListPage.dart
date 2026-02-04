@@ -6,10 +6,10 @@ import 'package:flutter/material.dart';
 
 class ChatListPage extends StatefulWidget {
 
-  ///[osservatore] è l'id di chi sta osservando la chat(quindi il tutor)
-  ///può essere null, se è null allora la lista è dell'utente
+  ///[osservato] è l'id di chi è osservata la chat(quindi il CCN)
+  ///può essere null, se è null allora la lista è dell'utente che ha acceduto alla lista
   ///
-  final String? osservatore;
+  final String? osservato;
   ///[nomeCCN] nome del CCN del quale si stà vedendo la lista, può essere null
   ///in questo caso allora è perchè non si sta vedendo la lista del ccn ma la propia
   final String? nomeCCN;
@@ -20,7 +20,7 @@ class ChatListPage extends StatefulWidget {
 
   const ChatListPage({
     super.key,
-    this.osservatore,
+    this.osservato,
     this.nomeCCN,
     required this.ruolo,
 
@@ -48,7 +48,7 @@ class _ChatListPageState extends State<ChatListPage> {
     super.initState();
 
 
-    currentUserId = widget.osservatore ?? FirebaseAuth.instance.currentUser!.uid;
+    currentUserId = widget.osservato ?? FirebaseAuth.instance.currentUser!.uid;
     _searchController.addListener(() {
       setState(() {
         _searchText = _searchController.text.trim().toLowerCase();

@@ -1,0 +1,34 @@
+@startuml DiagrammaSequenzaLetturaVocale
+
+actor Utente
+participant SingoloMessaggio
+participant SezioneLettura
+participant SintesiVocale
+participant TTS
+
+
+Utente->SingoloMessaggio: premeMessaggio
+SingoloMessaggio->SezioneLettura: avvisaRichiestaLettura(testoMessaggio)
+activate SezioneLettura
+SezioneLettura->SintesiVocale: getInstance()
+SezioneLettura->>SintesiVocale: Leggi(testoMessaggio)
+deactivate SezioneLettura
+activate SintesiVocale
+
+SintesiVocale->TTS: richiediStopVoce
+activate TTS
+TTS->TTS: stop
+
+TTS-->SintesiVocale: invia conferma
+deactivate TTS
+
+SintesiVocale->TTS: richiediLettura(testoMessaggio)
+activate TTS
+TTS->TTS: leggi(testoMessaggio)
+TTS-->SintesiVocale: invia conferma
+deactivate TTS
+deactivate SintesiVocale
+
+
+
+@enduml

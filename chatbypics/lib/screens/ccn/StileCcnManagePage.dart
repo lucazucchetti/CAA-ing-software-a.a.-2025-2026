@@ -179,7 +179,7 @@ abstract class Stileccnmanagepage {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => ChatListPage(osservatore: docId, ruolo: RuoloListaTerzi(), nomeCCN: nomeCcn),
+            builder: (context) => ChatListPage(osservato: docId, ruolo: RuoloListaTerzi(), nomeCCN: nomeCcn),
           ),
         );
       },
