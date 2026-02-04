@@ -79,3 +79,28 @@ Lo stesso lavoro di separazione tra grafica e logica è stato fatto per le pagin
 * settingPage
 * authPage
 
+## Analisi statica
+Con lo strumento DCM, abbiamo potuto effettuare un'analisi statica del sistema che ha portato alla rilevazione automatica di issue per migliorare la stabilità del progetto, attraverso le seguenti azioni, che verranno implementate in una versione futura.
+Di seguito viene riportato il risultato dell'analisi statica prodotto con gli issue da correggere per aumentarne la stabilità.
+```
+Analyzing chatbypics...                                                 
+
+   info • The file name 'AuthPage.dart' isn't a lower_case_with_underscores identifier • lib/screens/Authentication/AuthPage.dart:1:1 • file_names
+   info • Don't use 'BuildContext's across async gaps • lib/screens/Authentication/AuthPage.dart:51:28 • use_build_context_synchronously
+   info • Don't invoke 'print' in production code • lib/screens/Authentication/AuthPage.dart:72:7 • avoid_print
+   info • Don't use 'BuildContext's across async gaps • lib/screens/Authentication/AuthPage.dart:87:28 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps • lib/screens/Authentication/AuthPage.dart:91:28 • use_build_context_synchronously
+   info • The file name 'StileAuthPage.dart' isn't a lower_case_with_underscores identifier • lib/screens/Authentication/StileAuthPage.dart:1:1 • file_names
+   info • The file name 'verifyEmailPage.dart' isn't a lower_case_with_underscores identifier • lib/screens/Authentication/verifyEmailPage.dart:1:1 • file_names
+   info • Don't invoke 'print' in production code • lib/screens/Authentication/verifyEmailPage.dart:64:7 • avoid_print
+   info • The file name 'HomePage.dart' isn't a lower_case_with_underscores identifier • lib/screens/HomePage.dart:1:1 • file_names
+   info • The file name 'StileAddCcnPage.dart' isn't a lower_case_with_underscores identifier • lib/screens/ccn/StileAddCcnPage.dart:1:1 • file_names
+   info • The file name 'StileCcnEditPage.dart' isn't a lower_case_with_underscores identifier • lib/screens/ccn/StileCcnEditPage.dart:1:1 • file_names
+   info • The file name 'StileCcnManagePage.dart' isn't a lower_case_with_underscores identifier • lib/screens/ccn/StileCcnManagePage.dart:1:1 • file_names
+   info • The file name 'addCcnPage.dart' isn't a lower_case_with_underscores identifier • lib/screens/ccn/addCcnPage.dart:1:1 • file_names
+   info • The file name 'ccnManagePage.dart' isn't a lower_case_with_underscores identifier • lib/screens/ccn/ccnManagePage.dart:1:1 • file_names
+   info • The file name 'editCcnPage.dart' isn't a lower_case_with_underscores identifier • lib/screens/ccn/editCcnPage.dart:1:1 • file_names
+   info • The file name 'CategoriePittogrammi.dart' isn't a lower_case_with_underscores identifier • lib/screens/chat/CategoriePittogrammi.dart:1:1 • file_names
+   info • The file name 'ComposizioneMessaggio.dart' isn't a lower_case_with_underscores identifier •
+          lib/screens/chat/ComposizioneMessaggio/ComposizioneMessaggio.dart:1:1 • file_names
+```

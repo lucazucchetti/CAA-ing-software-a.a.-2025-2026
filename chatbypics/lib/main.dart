@@ -1,4 +1,4 @@
-import 'package:chatbypics/screens/authPage.dart';
+import 'package:chatbypics/screens/Authentication/AuthPage.dart';
 import 'package:chatbypics/screens/Authentication/verifyEmailPage.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
