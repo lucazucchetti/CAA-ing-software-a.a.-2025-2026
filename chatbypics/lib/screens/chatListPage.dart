@@ -35,19 +35,20 @@ class _ChatListPageState extends State<ChatListPage> {
   ///[currentUserId] id di chi ha fatto l'accesso
   ///
   late String currentUserId;
-
-  bool _isSearching = false; // Se stiamo cercando o no
+///[_isSearching] Indica se stiamo cercando qualcuno
+  bool _isSearching = false;
+  ///[TextEditingController] verifica se stiamo scrivendo/ editando il messaggio
   final TextEditingController _searchController = TextEditingController();
-  String _searchText = ""; // Il testo effettivo che stiamo cercando
+  ///[_searchController] Stringa che contine il messaggio finale
+  String _searchText = "";
 
+  ///[initState] Ascoltiamo da Firebase in tempo reale cosa scrive l'utente
   @override
   void initState() {
     super.initState();
 
 
     currentUserId = widget.osservatore ?? FirebaseAuth.instance.currentUser!.uid;
-
-    // Ascoltiamo cosa scrive l'utente in tempo reale
     _searchController.addListener(() {
       setState(() {
         _searchText = _searchController.text.trim().toLowerCase();
@@ -60,12 +61,11 @@ class _ChatListPageState extends State<ChatListPage> {
     _searchController.dispose();
     super.dispose();
   }
-  
+  ///[build] Costruisce tutta la schermata facendo vedere tutte le chat amiche
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        // SE STO CERCANDO -> MOSTRA TEXTFIELD, ALTRIMENTI -> MOSTRA TITOLO
         title: _isSearching
             ? TextField(
                 controller: _searchController,
@@ -82,20 +82,17 @@ class _ChatListPageState extends State<ChatListPage> {
         ///colore in base al ruolo
         backgroundColor: widget.ruolo.getColoreBackground(),
         iconTheme: const IconThemeData(color: Colors.black), // Icone nere per contrasto
-        
+        // Se clicco la X chiude, se schiaccio la lente inizia la ricerca
         actions: [
-          // GESTIONE DEL TASTO (LENTE o X)
           IconButton(
             icon: Icon(_isSearching ? Icons.close : Icons.search),
             onPressed: () {
               setState(() {
                 if (_isSearching) {
-                  // Se stavo cercando e clicco X -> Chiudo e resetto
                   _isSearching = false;
                   _searchController.clear();
                   _searchText = "";
                 } else {
-                  // Se clicco la lente -> Apro la ricerca
                   _isSearching = true;
                 }
               });
@@ -104,15 +101,14 @@ class _ChatListPageState extends State<ChatListPage> {
         ],
       ),
       
-      // 1. STREAMBUILDER: Ascolta le chat di Firebase
+      ///[Streambuilder] Ascolta le chat, Gestisce gli stati di caricamento e errori
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
             .collection('chats')
-            .where('visibleTo', arrayContains: currentUserId) // Mostra solo se sono tra i "visibili"
-            .orderBy('lastMessageTime', descending: true) // Le più recenti in alto
+            .where('visibleTo', arrayContains: currentUserId)
+            .orderBy('lastMessageTime', descending: true)
             .snapshots(),
         builder: (context, snapshot) {
-          // Gestione stati di caricamento ed errore
           if (snapshot.hasError) return Center(child: Text("Errore: ${snapshot.error}"));
           if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
 
@@ -122,22 +118,20 @@ class _ChatListPageState extends State<ChatListPage> {
             return const Center(child: Text("Nessuna chat attiva.\nPremi + per iniziarne una!", textAlign: TextAlign.center));
           }
 
-          // 2. LISTA DELLE CHAT
+          // Return della Lista delle chat, facendo visualizzare solo gli amici
           return ListView.builder(
             itemCount: chatDocs.length,
             itemBuilder: (context, index) {
               var chatData = chatDocs[index].data() as Map<String, dynamic>;
               String chatId = chatDocs[index].id;
-              
-              // Chi è l'altro partecipante?
-              // Prendo la lista dei partecipanti e rimuovo il mio ID. Quello che resta è l'amico.
+
               List<dynamic> participants = chatData['participants'];
               String friendUid = participants.firstWhere(
                 (id) => id != currentUserId, 
                 orElse: () => participants.first // Fallback se sto parlando con me stesso
               );
 
-              // 3. RECUPERO IL NOME DELL'AMICO (FutureBuilder)
+              ///[FutureBuilder<DocumentSnapshot>]
               return FutureBuilder<DocumentSnapshot>(
                 future: FirebaseFirestore.instance.collection('users').doc(friendUid).get(),
                 builder: (context, userSnapshot) {
@@ -150,22 +144,19 @@ class _ChatListPageState extends State<ChatListPage> {
                   ? "${userData['Nome']} ${userData['Cognome']}" 
                   : "Utente sconosciuto";
 
-                // --- LOGICA DI FILTRO ---
-                // Se sto cercando E il nome non contiene quello che ho scritto...
+                // Cerco i nomi se non li trovo, nascondo la riga e vado avanti
                 if (_isSearching && _searchText.isNotEmpty) {
                   if (!friendName.toLowerCase().contains(_searchText)) {
-                    // ... Restituisco un widget invisibile (nascondo la riga)
                     return const SizedBox.shrink();
                   }
                 }
-                // -----------------------
 
-                // Dati dell'ultimo messaggio... (tuo codice precedente)
+
+                // Dati dell'ultimo messaggio
                 Map<String, dynamic> lastMsg = chatData['lastMessageData'] ?? {};
                 String lastMsgText = lastMsg['description'] ?? "Foto inviata";
               
                 return ListTile(
-                  // ... (tutto il resto del tuo ListTile rimane uguale)
                   contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   leading: CircleAvatar(
                     backgroundColor: widget.ruolo.getColoreIcone(),
@@ -196,7 +187,7 @@ class _ChatListPageState extends State<ChatListPage> {
         },
       ),
 
-      // BOTTONE NUOVA CHAT
+      ///[floatingActionButton] bottone per generare un altra chat
       floatingActionButton: widget.ruolo.buildBottone(context),
     );
   }

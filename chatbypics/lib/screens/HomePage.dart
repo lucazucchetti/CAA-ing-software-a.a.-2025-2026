@@ -16,15 +16,19 @@ class Homepage extends StatefulWidget{
   
 
   @override
+  ///[createState] Riceve lo Stato della Homepage
   State<Homepage> createState() => _HomepageState();
 }
 
 class _HomepageState extends State<Homepage> {
   int _selectedIndex = 0;
-  String _userRole = ""; // Qui salveremo se è "Tutor" o altro
-  bool _isLoading = true; // Per aspettare il caricamento del ruolo
+  ///[_userRole] Contine lo stato del ruolo dell'account
+  String _userRole = "";
+  ///[_isLoading] aspetta il caricamento del ruolo
+  bool _isLoading = true;
 
   @override
+  ///[initState] verifichiamo che la homepage si stia caricando altrimenti fermiamo tutto
   void initState() {
     super.initState();
 
@@ -35,24 +39,21 @@ class _HomepageState extends State<Homepage> {
     if (widget.testRole != null) {
       setState(() {
         _userRole = widget.testRole!;
-        _isLoading = false; // Smettiamo di caricare subito
+        _isLoading = false;
       });
     } else {
-      // Comportamento normale (App reale) -> Chiama Firebase
       _checkUserRole();
       _checkProfiloStatus();
     }
   }
 
-  // 1. CONTROLLIAMO IL RUOLO SU FIREBASE
+  ///[_checkUserRole] serve per vedere e restituire il ruolo dell'user
   Future<void> _checkUserRole() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
       final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
       if (mounted) {
         setState(() {
-          // Assicurati che nel DB il campo si chiami 'ruolo' e il valore sia 'Tutor'
-          // Se hai usato un booleano, cambia in: _isTutor = data['isTutor'] == true;
           _userRole = doc.data()?['ruolo'] ?? "Utente"; 
           _isLoading = false;
         });
@@ -60,7 +61,7 @@ class _HomepageState extends State<Homepage> {
     }
   }
 
-  // Ascolta se il tutor elimina o disattiva questo account mentre l'app è aperta
+  ///[_checkProfiloStatus] check continuo per vedere se il tutor cambia lo status dell'account
   void _checkProfiloStatus() {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) return;
@@ -68,36 +69,32 @@ class _HomepageState extends State<Homepage> {
     FirebaseFirestore.instance
         .collection('users')
         .doc(uid)
-        .snapshots() // Ascolta in tempo reale ogni cambiamento
+        .snapshots()
         .listen((snapshot) async {
-      
-      // CASO A: Il documento è stato ELIMINATO dal database (Tutor ha premuto cestino)
+
       if (!snapshot.exists) {
         await FirebaseAuth.instance.signOut();
-        // L'AuthGate/Wrapper riporterà automaticamente l'utente al Login
         return;
       }
 
-      // CASO B: Il documento c'è, ma il campo profiloAttivo è FALSE (Tutor ha spento l'interruttore)
-      // Se il campo non esiste, diamo per scontato sia attivo (true)
+     ///[isActive] se è attivo forziamo l'attivazione
       bool isActive = snapshot.data()?['profiloAttivo'] ?? true;
       
       if (!isActive) {
-        // Logout forzato
         await FirebaseAuth.instance.signOut();
       }
     });
   }
 
   @override
+  ///[build] Carica la homepage
+  ///se effettivamente si carica fa vedere la lista delle chat
+  /// altrimenti mostra la rotella per il caricamento
   Widget build(BuildContext context) {
-    // Se stiamo ancora caricando, mostriamo una rotellina
     if (_isLoading) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
     List<Widget> pages = [];
-    // 2. COSTRUIAMO LE LISTE IN BASE AL RUOLO
-    // Lista delle Pagine
     if (widget.testRole != null) {
       // Se siamo in test, mettiamo un widget stupido che non chiama Firebase
       pages.add(const Center(child: Text("Chat List Finta"))); 
@@ -106,7 +103,6 @@ class _HomepageState extends State<Homepage> {
       pages.add(ChatListPage(ruolo: RuoloListaMia()));
     }
 
-    // Lista dei Bottoni
     List<BottomNavigationBarItem> navItems = [
       const BottomNavigationBarItem(
         icon: Icon(Icons.chat_bubble_outline), 
@@ -115,7 +111,7 @@ class _HomepageState extends State<Homepage> {
       ),
     ];
 
-    // --- BLOCCO SOLO PER TUTOR ---
+    // se l'user è un tutor allora può bloccare
     if (_userRole == "Tutor") {
       /**
        * Modifica per fare una pagina finta se stiamo facendo un test
@@ -134,7 +130,6 @@ class _HomepageState extends State<Homepage> {
         )
       );
     }
-    // -----------------------------
 
     // Aggiungiamo le Impostazioni (visibili a tutti)
     /**
@@ -153,12 +148,12 @@ class _HomepageState extends State<Homepage> {
         label: "Impostazioni"
       )
     );
-
+    ///[Scaffold] mostra e va navigare nella chat
     return Scaffold(
       // Mostra la pagina corretta dalla lista dinamica
       body: pages[_selectedIndex],
       
-      bottomNavigationBar: NavigationBar( // O BottomNavigationBar
+      bottomNavigationBar: NavigationBar(
         selectedIndex: _selectedIndex,
         onDestinationSelected: (index) {
           setState(() {
@@ -166,7 +161,6 @@ class _HomepageState extends State<Homepage> {
           });
         },
         destinations: navItems.map((item) {
-          // Adattamento se usi NavigationBar invece di BottomNavigationBar
           return NavigationDestination(
             icon: item.icon, 
             selectedIcon: item.activeIcon,
