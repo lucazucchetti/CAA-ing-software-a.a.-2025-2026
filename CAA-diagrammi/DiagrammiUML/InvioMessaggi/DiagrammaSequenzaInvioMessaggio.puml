@@ -1,0 +1,49 @@
+@startuml DiagrammaSequenzaInvioMessaggio
+!pragma teoz true
+
+actor Utente
+participant ComposizioneMessagio
+participant SezioneScrittura
+queue ComposingMessage
+participant ChatService
+database DatabaseMessaggi
+
+Utente->ComposizioneMessagio: seleziona bottone invio
+ComposizioneMessagio->SezioneScrittura: avvisa utente vuole inviare messaggio
+activate SezioneScrittura
+SezioneScrittura->ComposingMessage: leggi la coda di pittogrammi
+ComposingMessage-->SezioneScrittura: risposta
+
+opt ComposingMessage ha almeno 1 pittogramma
+SezioneScrittura->SezioneScrittura: componi messaggio
+SezioneScrittura->ChatService: inviaMessaggio(messaggio)
+activate ChatService
+ChatService->DatabaseMessaggi: InviaMessaggio(messaggio)
+activate DatabaseMessaggi
+DatabaseMessaggi->DatabaseMessaggi: registraNuovoMessaggio
+DatabaseMessaggi-->ChatService: risposta
+deactivate DatabaseMessaggi
+
+ChatService->ChatService: componiAnteprimaChat
+ChatService->DatabaseMessaggi: inviaAnteprimaChat(anteprima)
+
+activate DatabaseMessaggi
+DatabaseMessaggi->DatabaseMessaggi: aggiornaAnteprimaChat
+DatabaseMessaggi-->ChatService: risposta
+deactivate DatabaseMessaggi
+
+ChatService-->SezioneScrittura: messaggioInviato
+deactivate ChatService
+
+activate SezioneScrittura
+SezioneScrittura->SezioneScrittura: aggiornaPagina
+SezioneScrittura->ComposingMessage: cancella coda
+SezioneScrittura->SezioneScrittura: picker a false
+
+end
+deactivate SezioneScrittura
+
+deactivate SezioneScrittura
+
+
+@enduml

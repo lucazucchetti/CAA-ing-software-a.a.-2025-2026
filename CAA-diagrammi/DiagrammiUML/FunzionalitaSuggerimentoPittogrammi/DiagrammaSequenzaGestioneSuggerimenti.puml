@@ -1,0 +1,181 @@
+@startuml DiagrammaSequenzaGestioneSuggerimenti
+!pragma teoz true
+
+actor UtenteScrittore
+participant Pittogramma
+participant SezioneScrittura
+queue ComposingMessage
+queue Suggerimenti
+participant SingoloSuggerimento
+participant GestoreJson
+collections mappaSuggerimenti
+participant suggerimento
+database FileJson
+
+== inizializzazione(init state) ==
+
+activate SezioneScrittura
+SezioneScrittura->GestoreJson: getInstance()
+activate GestoreJson
+GestoreJson-->SezioneScrittura: invia istanza
+deactivate GestoreJson
+
+
+
+SezioneScrittura->GestoreJson: inizializzaSuggerimenti, leggi file
+activate GestoreJson
+
+create mappaSuggerimenti
+GestoreJson->>mappaSuggerimenti: <<CREATE>>
+GestoreJson->mappaSuggerimenti: imposta a vuoto
+GestoreJson->FileJson: apri file Json(nome)
+activate FileJson
+
+opt File non esiste
+    GestoreJson->FileJson: crea file
+end
+
+loop fineFile
+    GestoreJson->FileJson: Leggi suggerimento
+    GestoreJson->mappaSuggerimenti: aggiungi dato a mappa
+end
+
+
+GestoreJson->FileJson: chiudi file
+deactivate FileJson
+GestoreJson-->SezioneScrittura: finito
+deactivate GestoreJson
+deactivate SezioneScrittura
+
+
+== Aggiornamento suggerimenti ==
+
+UtenteScrittore -> Pittogramma: CliccaPittogramma
+Pittogramma->SezioneScrittura: SegnalaClick(info Pittogramma)
+activate SezioneScrittura
+SezioneScrittura->ComposingMessage:Leggi ultimo messaggio
+ComposingMessage-->SezioneScrittura:Dai ultimo messaggio
+
+opt esiste ultimo messaggio
+
+SezioneScrittura->GestoreJson:Aggiorna Suggerimenti(nuovoMessaggio, vecchioMessaggio)
+
+activate GestoreJson
+
+create suggerimento
+GestoreJson->>suggerimento: <<CREATE>>
+
+GestoreJson->mappaSuggerimenti: controllo esistenza suggerimenti per PittogrammaVecchio
+
+alt esistonoSuggerimenti
+    GestoreJson->suggerimento: inserisci suggerimenti trovati
+else
+    GestoreJson->suggerimento: imposto suggerimenti a lista vuota
+end
+
+opt esistePittogrammaNuovoNeiSuggerimenti
+    GestoreJson->suggerimento: elimino pittogramma da suggerimento
+end
+
+GestoreJson->suggerimento: inserisci pittogrammaNuovo in testa
+
+opt numero suggerimenti>3
+    GestoreJson->suggerimento: elimina suggerimento più vecchio
+end
+
+
+GestoreJson->suggerimento: prendi suggerimento
+GestoreJson->mappaSuggerimenti: inserisci suggerimento alla mappa
+
+GestoreJson->>suggerimento: <<DESTROY>>
+destroy suggerimento
+
+GestoreJson->GestoreJson: salva nel file
+activate GestoreJson
+GestoreJson->FileJson: apri file Json
+activate FileJson
+
+loop fineDati
+
+    GestoreJson->mappaSuggerimenti:Leggi dato
+    GestoreJson->FileJson: scrivi dato
+
+end
+
+GestoreJson->FileJson: chiudi file
+deactivate GestoreJson
+deactivate FileJson
+GestoreJson-->SezioneScrittura: aggiornato
+deactivate GestoreJson
+
+end
+
+== Costruzione Suggerimenti ==
+
+SezioneScrittura->ComposingMessage: Inserisci nuovo pittogramma
+
+SezioneScrittura->SezioneScrittura: aggiornaSezione
+activate SezioneScrittura
+
+SezioneScrittura->GestoreJson: TrovaSuggerimenti(UltimoPittogramma)
+
+activate GestoreJson
+
+GestoreJson->mappaSuggerimenti: cercaSuggerimenti(UltimoPittogramma)
+
+alt esistonoSuggerimenti
+
+    mappaSuggerimenti-->GestoreJson: invia(ListaSuggerimenti)
+   
+
+else
+    mappaSuggerimenti-->GestoreJson: invia([])
+
+end
+
+GestoreJson-->SezioneScrittura: invia(ListaSuggerimenti)
+
+deactivate GestoreJson
+activate SezioneScrittura
+
+alt Ci sono dei suggerimenti corrispondenti
+
+create Suggerimenti
+SezioneScrittura->>Suggerimenti: <<CREATE>> (ListaSuggerimenti)
+activate Suggerimenti
+Suggerimenti->Suggerimenti: crea
+activate Suggerimenti
+
+loop finisconoSuggerimenti
+
+create SingoloSuggerimento
+Suggerimenti->SingoloSuggerimento: <<CREATE>> (datiSingoloSuggerimento)
+activate SingoloSuggerimento
+SingoloSuggerimento->SingoloSuggerimento: crea
+SingoloSuggerimento-->Suggerimenti: invia struttura
+deactivate SingoloSuggerimento
+
+end
+
+deactivate Suggerimenti
+
+
+Suggerimenti-->SezioneScrittura: invia struttura
+deactivate Suggerimenti
+
+
+else
+    opt è presente la barra suggerimenti
+        SezioneScrittura->SezioneScrittura: rimuovi la barra
+
+    end
+    
+
+end
+
+deactivate SezioneScrittura
+
+
+
+
+@enduml

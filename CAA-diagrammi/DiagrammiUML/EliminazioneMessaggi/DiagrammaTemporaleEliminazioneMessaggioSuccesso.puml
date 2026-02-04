@@ -1,0 +1,46 @@
+@startuml TimingEliminazioneMessaggioSuccesso
+
+title Tentativo cancellazione messaggio prima di 30s dall'invio
+
+robust "Utente" as u
+robust "Grafica" as g
+robust "RuoloChat" as r
+robust "Stato Messaggio" as s
+
+
+scale 30 as 1200 pixel
+
+@0
+u is "Attivo"
+s is "Eliminabile"
+g is "Non mostrare nulla"
+r is "Ascolto"
+
+@5
+u->r: elimina\nmessaggio
+r is "Verifica time stamp"
+
+@10
+r is "Attesa risposta"
+r-->g: Crea\nbanner
+g is "Mostra banner conferma"
+
+@14
+u->g: Risposta
+g is "Non mostrare nulla"
+g->r: Risposta
+r is "Elimina messaggio"
+
+@18
+r@14<->@18: {tempo\neliminazione}
+r is "Ascolto"
+r->g: mostra SnackBar\neliminato
+g is "Mostra SnackBar eliminato"
+s is "Cancellato"
+
+@21
+g@18<->@21: {3 sec} 
+g is "Non mostrare nulla"
+
+
+@enduml

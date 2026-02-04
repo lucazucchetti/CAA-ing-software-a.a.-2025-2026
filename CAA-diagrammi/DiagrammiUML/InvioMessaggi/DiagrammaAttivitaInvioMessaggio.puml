@@ -1,0 +1,44 @@
+@startuml  DiagrammaAttivitaInvioMessaggio
+|#PaleGreen|UTENTE|
+start
+:seleziona tasto invio messaggio <evento>; <<eventSignal>>
+|#GreenYellow|SEZIONE SCRITTURA|
+if(ci sono messaggi da inviare?) then (yes)
+    :costruzione messaggio;
+
+    |#PaleGoldenRod|CHAT SERVICE|
+    :invia messaggio a DB <invio>; <<sendSignal>>
+
+    |#Yellow|DATABASE|
+    :ricevi messaggio <evento>; <<eventSignal>>
+    :aggiorna chat;
+    :invio conferma operazione <invio>; <<sendSignal>>
+
+    |CHAT SERVICE|
+    :ricevi conferma <evento>; <<eventSignal>>
+    :componi anteprima chat;
+    :invia anteprima chat a DB <invio>; <<sendSignal>>
+
+    |DATABASE|
+    :ricevi anteprima;
+    :aggiorna anteprima;
+    :invio conferma operazione <invio>; <<sendSignal>>
+
+    |CHAT SERVICE|
+    :ricevi conferma <evento>; <<eventSignal>>
+
+    |SEZIONE SCRITTURA|
+    fork
+        :aggiorna schermata widget;
+    fork again
+        :metti picker false;
+    fork again
+        :cancella coda anteprima messaggi;
+    end fork
+
+else(no)
+endif
+
+stop
+
+@enduml

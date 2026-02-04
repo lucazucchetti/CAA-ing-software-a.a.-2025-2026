@@ -1,0 +1,27 @@
+@startjson StrutturaJSONSuggerimenti
+{
+    "IDIMMAGINE1.png":[
+        "URL_più_recente1",
+        "URL_medio_recente1",
+        "URL_meno_recente1"
+    ],
+    "IDIMMAGINE2.png":[
+        "URL_più_recente2",
+        "URL_medio_recente2",
+        "URL_meno_recente2"
+    ],
+    "IDIMMAGINE3.png":[
+        "URL_più_recente3",
+        "URL_medio_recente3",
+        "URL_meno_recente3"
+    ],
+    "IDIMMAGINE4.png":[
+        "URL_più_recente4",
+        "URL_meno_recente4"
+    ],
+    "IDIMMAGINE5.png":[
+        "URL_più_recente5"
+    ]
+}
+
+@endjson

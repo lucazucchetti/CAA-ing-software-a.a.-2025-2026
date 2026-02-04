@@ -1,0 +1,37 @@
+@startuml TimingEliminazioneMessaggioFallimento
+
+title Tentativo cancellazione messaggio Dopo 30s dall'invio
+
+robust "Utente" as u
+robust "Grafica" as g
+robust "RuoloChat" as r
+robust "Stato Messaggio" as s
+
+
+scale 30 as 500 pixel
+
+@0
+u is "Attivo"
+s is "Eliminabile"
+g is "Non mostrare nulla"
+r is "Ascolto"
+
+@30
+s is "Permanente"
+
+@35
+u->r: elimina\nmessaggio
+r is "Verifica time stamp"
+
+@39
+g is "Mostra errore timeout"
+r is "Ascolto"
+r-->g: mostra errore
+
+@42
+g@39<->@42: {3 sec}
+g is "Non mostrare nulla"
+
+
+
+@enduml

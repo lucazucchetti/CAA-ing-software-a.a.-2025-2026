@@ -1,0 +1,20 @@
+@startuml TimingEliminazioneMessaggio
+
+title Cancellazione messaggio entro 30s
+
+robust "Grafica al click" as g
+robust "Stato Messaggio" as s
+
+
+scale 30 as 500 pixel
+
+@0
+s is "Eliminabile"
+g is "Mostra Banner conferma"
+
+@30
+s is "Permanente"
+g is "Mostra errore timeout"
+
+
+@enduml

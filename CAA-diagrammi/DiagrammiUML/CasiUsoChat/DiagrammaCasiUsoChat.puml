@@ -1,0 +1,58 @@
+@startuml DiagrammaCasiUsoChat
+left to right direction
+
+actor "Osservatore" as o
+actor "Scrittore" as s 
+actor "DB messaggi" as db
+actor "Servizio TTS" as servizio
+actor "FileSystem" as file
+
+
+o<|- s
+
+
+rectangle ChatPage{
+
+    usecase "vedi messaggi chat" as vediMessaggi
+    usecase "mostra/nascondi i pitogrammi" as mostraPit
+    usecase "seleziona categoria" as selezionaCat
+    usecase "inserisci pittogramma in composizione messaggio" as selezPit
+    usecase "ricerca pittogramma" as ricPit
+    usecase "rimuovi pittogramma da composizione messaggio" as rimPit
+    usecase "leggi messaggio con sintesi vocale" as leggi
+    usecase "richiedi eliminazione messaggio" as eliminaMess
+    usecase "elimina messaggio da server" as eliminaServ
+    usecase "ricerca messaggi chat da server" as cercaMessServ
+    usecase "uso sintesi vocale" as sint
+    usecase "aggiornamento suggerimenti" as agg
+    usecase "invia messaggio" as inv
+    usecase "registra nuovo messaggio" as reg
+}
+
+s -- inv
+reg -- db
+inv ..> reg: include
+agg -- file
+selezPit ..> agg: include
+servizio -- sint
+o -- vediMessaggi
+s -- mostraPit
+s -- selezionaCat
+s -- selezPit
+s -- ricPit
+s -- rimPit
+o -- leggi
+s -- eliminaMess
+
+leggi ..> sint: include
+
+note "CONDIZIONE EXTEND:\n-l'utente conferma l'eliminazione del messaggio\n-il messaggio è stato inviato massimo 30s prima dell'eliminazione" as n
+
+eliminaMess <.up. n: extend
+n .down. eliminaServ
+
+cercaMessServ <.. vediMessaggi: include
+db - eliminaServ
+db - cercaMessServ 
+
+@enduml
