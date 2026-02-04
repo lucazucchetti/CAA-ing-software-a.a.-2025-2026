@@ -1,10 +1,10 @@
-import 'package:chatbypics/screens/ccnManagePage.dart';
+import 'package:chatbypics/screens/ccn/ccnManagePage.dart';
 import 'package:chatbypics/screens/chatList/RuoloListaMia.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:chatbypics/screens/chatListPage.dart';
-import 'package:chatbypics/screens/settingPage.dart';
+import 'package:chatbypics/screens/setting/settingPage.dart';
 
 /*
 Classe che gestisce la barra per navigare tra le varie pagine all'interno
