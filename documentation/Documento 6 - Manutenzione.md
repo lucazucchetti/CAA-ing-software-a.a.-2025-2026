@@ -1,6 +1,47 @@
 # Software maintenance
 
-Poiché la consegna del progetto relativo all’applicazione chatbypics vede come termine ultimo il 09/02/2026 con l’esposizione ai docenti del lavoro svolto, nell’attività di manutenzione verrà inclusa l’attività di refactoring del codice e non l’aggiunta di nuovi requisiti con la conseguente modifica e rilascio di nuovi versioni future.   
+Poiché la consegna del progetto relativo all’applicazione chatbypics vede come termine ultimo il 09/02/2026 con l’esposizione ai docenti del lavoro svolto, nell’attività di manutenzione verrà inclusa l’attività di refactoring del codice e non l’aggiunta di nuovi requisiti con la conseguente modifica e rilascio di nuovi versioni future.  
+
+## CASO Refatoring ChatPage e ChatList
+La classe ChatPage, cuore dell'applicazione, è stata soggetta ad una grande operazine di refactoring, prevista comunque dato l'approcio di prototipazione evolutiva utilizzato.
+
+### Coerenza con l'architettura
+La classe inizalmente è stata sviluppata in modo prototipazionale, quindi le sezioni logiche di interazione con le interfaccie verso servizi esterni e grafiche erano tutte insieme. Al fine di seguire l'architettura prevista in modo da migliorare il livello di manutentibilità è stata svolta un operazione di refactoring consistente nella divisione a strati delle funzionalità.
+
+#### STRUTTURA:
+
+Abbiamo inanzitutto diviso la classe in 4 sezioni
++ Attribuiti di stile
++ Grafica
++ Logica
++ Interfacce a servizi
+
+Gli attribuiti di stile sono classi astratte contenenti gli oggetti grafici che saranno utilizzati dai Widget Stateless corrispondenti per la grafica, qui rientrano ad esempio i colori utilizzati dal widget oppure le dimensioni di padding o margin ecc.
+
+La parte grafica composta dai singoli Widget Stateless presenti nella chat page come SezioneInput, GrigliaCategorie, SingoliMessaggi, PersistentPicker ecc. Tutti questi Widget realizzano solo la parte grafica, interagiscono solo con la parte logica per segnalare se eventualmente è stato premuto un particolare Widget (al fine di far svolgere un funzionalità da parte della Logica)
+
+La parte logica composta dai Widget Statefull SezioneScrittura e SezioneLettura  decidono quali Widget della schermata costruire e gestiscono l'interazione dell'utente con gli stessi interfacciandosi eventualmente con le interfacce apposite per interagire con entità esterne come il database. In particolare:
+
++ SezioneLettura si occupa di mostrare i messaggi della chat secondo le impostazioni dell'utente e gestire la logica di richiesta di lettura vocale(utilizzando gli appositi servizi)
+
++ SezioneScrittura si occupa di mostrare i Widget necessari alla composizione del messaggio gestento la logica e quindi le funzionalità da eseguire quando l'utente interagisce con i vari Widget Stateless utilizzando se necessario appositi servizi
+
+La parte di interfacce a servizi invece va a separare la parte di interazione con database o servizi esterni alla applicazione(come lettura vocale) dalla chatPage
+
+La classe chatPage ottenuta non è altro che un direttore, che in base al ruolo(descritto nella sezione successiva), deciderà quale schermata costruire(e quindi anche quali gestori logici attivare).
+
+### Aggiunta funzionalità ControlloChat
+Aggiungendo la funzionalità di controllo delle chat dei CCN da parte del proprio tutor al fine di riutilizzare la stessa classe si è deciso di svolgere un operazione di refactoring, l'operazione ha consistito nell'andare ad implementrare il pattern Player-Role per la ChatPage. Dividendo in ruolo di Osservatore e RuoloDiScrittore.
+I due ruoli implementano i metodi logici utilizzati per costruire i componenti logici per la scrittura e composizione dei messaggi: caso scrittore costruisce l'oggetto RuoloChat, caso lettore non lo costruisce; ed implementano la gestione logica dell'eliminazione di un messaggio costruendo nel caso il banner di richiesta di eliminazione e gestendo l'interazione con la classe ChatService per eliminare il messaggio.
+
+In modo analogo è stato necessario eseguire un operazione di refactoring per la classe ChatList, introducendo il pattern Player-Role per la classe, creando i ruoli ListaMia e ListaTerzi che costruiscono la lista in base a se è la lista dell'utente oppure la lista di un CCN che il tutor sta visualizzando.
+
+### Documentazione
+
+Infine si è eseguita un operazione di refactoring andando a integrare la documentazione per tutte le parti sviluppate seguendo lo standard di documentazione di dart(simile a JavaDoc in java)
+
+## Altre operazioni di refactoring
+
 Durante l’attività di refactoring sono state separate principalmente le parti di codice dedicate allo stile e personalizzazione grafica dell’interfaccia dalla parte di logica e struttura delle pagine dell’applicazione. 
 
 Quest'attività comporta l'aumento della futura manutenibilità per una modifica della grafica della pagina futura.
