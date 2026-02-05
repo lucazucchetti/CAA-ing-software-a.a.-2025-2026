@@ -3,7 +3,7 @@ import 'package:chatbypics/screens/chatList/RuoloListaMia.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:chatbypics/screens/chatListPage.dart';
+import 'package:chatbypics/screens/chatList/chatListPage.dart';
 import 'package:chatbypics/screens/setting/settingPage.dart';
 
 /*

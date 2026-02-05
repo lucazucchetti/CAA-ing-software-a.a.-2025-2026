@@ -1,5 +1,5 @@
 import 'package:chatbypics/screens/chat/EliminazioneMessaggio/BottoneAlert.dart';
-import 'package:chatbypics/screens/chat/EliminazioneMessaggio/StileBannerEliminazione/StileBannerEliminazione.dart';
+import 'package:chatbypics/screens/chat/EliminazioneMessaggio/Stile/StileBannerEliminazione.dart';
 import 'package:flutter/material.dart';
 
 ///Classe che costruisce il banner di eliminazione di un messaggio grazie al suo metodo

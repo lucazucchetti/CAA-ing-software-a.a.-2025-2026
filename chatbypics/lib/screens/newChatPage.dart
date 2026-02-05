@@ -1,7 +1,7 @@
 import 'package:chatbypics/services/AvvisatoreSnackBar.dart';
 import 'package:chatbypics/screens/chat/RuoloScrittore.dart';
 import 'package:chatbypics/services/chat_service.dart';
-import 'package:chatbypics/screens/chatPage.dart'; // La pagina della chat singola
+import 'package:chatbypics/screens/chat/chatPage.dart'; // La pagina della chat singola
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';

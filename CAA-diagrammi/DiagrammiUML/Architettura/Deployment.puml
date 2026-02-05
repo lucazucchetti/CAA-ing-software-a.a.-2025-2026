@@ -1,0 +1,36 @@
+@startuml Deployment
+left to right direction
+
+node "Smartphone" as sm{
+    node "ChatByPics" as chat{
+        component "GestoreJson" as gest
+        component "PictogramService" as pitt
+        component "chatService" as cserv
+        component "preferenceService" as pserv
+        component "auth" as auth
+    }
+    database "FileSystem" as filesys{
+        folder "APP Sandbox" as sbox{
+            artifact "suggerimenti.json" as file
+        }
+
+    }
+}
+
+node "Firebase Google" as fire{
+    component "servizioAutenticazione" as servf
+    database "Database" as db
+}
+
+node "ARASAAC" as arasac{
+    database "API pittogrammi" as api
+}
+
+gest ..> file: lettura/scrittura su file
+pitt ..> api: REST/HTTP
+
+pserv<=> db: HTTPS
+db <=> cserv: HTTPS
+servf <=> auth: Token
+
+@enduml

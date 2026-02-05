@@ -1,4 +1,4 @@
-import 'package:chatbypics/screens/chat/EliminazioneMessaggio/StileBannerEliminazione/StileBottoneAlert.dart';
+import 'package:chatbypics/screens/chat/EliminazioneMessaggio/Stile/StileBottoneAlert.dart';
 import 'package:flutter/material.dart';
 
 ///Classe che costruisce i singoli bottoni per la richiesta di eliminazione di un

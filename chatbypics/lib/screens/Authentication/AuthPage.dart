@@ -1,4 +1,4 @@
-import 'package:chatbypics/screens/Authentication/StileAuthPage.dart';
+import 'package:chatbypics/screens/Authentication/Stile/StileAuthPage.dart';
 import 'package:chatbypics/screens/setting/StileSettingPage.dart';
 import 'package:chatbypics/services/auth.dart';
 import 'package:firebase_auth/firebase_auth.dart';

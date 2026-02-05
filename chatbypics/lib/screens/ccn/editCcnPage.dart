@@ -1,4 +1,4 @@
-import 'package:chatbypics/screens/ccn/StileCcnEditPage.dart';
+import 'package:chatbypics/screens/ccn/Stile/StileCcnEditPage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 

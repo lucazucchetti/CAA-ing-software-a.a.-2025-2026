@@ -1,6 +1,6 @@
 import 'package:chatbypics/screens/ccn/addCcnPage.dart';
 import 'package:chatbypics/screens/chatList/RuoloListaTerzi.dart';
-import 'package:chatbypics/screens/chatListPage.dart';
+import 'package:chatbypics/screens/chatList/ChatListPage.dart';
 import 'package:chatbypics/screens/ccn/editCcnPage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
