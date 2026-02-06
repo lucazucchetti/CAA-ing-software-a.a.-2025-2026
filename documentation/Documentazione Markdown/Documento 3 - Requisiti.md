@@ -34,6 +34,9 @@
 
 *2.4 Vincoli*. Sono presenti dei vincoli per gli utenti di tipo CCN, con limitazioni sulle categorie di pittogrammi che sono autorizzati a usare e la creazione di nuove chat con altre persone. Il database remoto di Firebase dispone di uno spazio limitato con la versione gratuita utilizzata per questo progetto.
 
+Di seguito lo use case diagram, per avere una panoramica generale dell'applicazione.
+![Immagine use case diagram](Immagini/useCaseDiagramGenerale.png)
+
 ## 3\. 	Requisiti specifici
 
 La fase di elicitazione è stata condotta attraverso interviste dirette con il committente (docenti) e l'analisi della documentazione fornita, inclusi i requisiti per progetti di ingegneria del software AA 2025/26.  

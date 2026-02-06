@@ -36,9 +36,16 @@ Di seguito le istruzioni per eseguire l'app chatbypics
 
 + Posizionarsi su chatbypics/lib e lanciare il comando: flutter run
 
-### Esecuzione da simulatore IoS su Visual Studio Code
+### Esecuzione da simulatore iOS su Visual Studio Code
++ Avere installato e configurato flutterSDK
++ eseguire dal terminale dell'editor: "*flutter pub get*" per installare le dipendenze 
++ assicurarsi che sia scaricato il simulatore di iOS presente con l'installazione di XCode sul Mac
++ premere la seguente combinazione "*Shift+Command+P*" seguito da "*Select Device*", da cui si seleziona la versione del simulatore scaricata
++ Dal main del progetto su *chatbypics/lib* premere il pulsante di debug, oppure da terminale "*flutter run*"
 
 ### Esecuzione su Smartphonen Android
 
 + Installare l'apk sul dispositivo Android e farlo partire
+
+
 
