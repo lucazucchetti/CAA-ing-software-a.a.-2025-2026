@@ -227,5 +227,7 @@ Il progetto sarà considerato completo solo dopo la consegna di tutti i seguenti
 La consegna avverrà condividendo l'accesso alla repository del codice sorgente che contiene sia l'applicazione che la documentazione:
 
 * **Repository Unica:** Tutti i file di codice sorgente e l'intera documentazione di progetto saranno ospitati in un'unica repository privata.  
-* **Condivisione Accesso:** L'accesso alla repository deve essere garantito al Prof. Gargantini e alla Prof. Bonfanti aggiungendoli come collaboratori.  
+* **Condivisione Accesso:** L'accesso alla repository deve essere garantito al Prof. Gargantini e alla Prof. Bonfanti aggiungendoli come collaboratori.
+
+## PER INFORMAZIONI SULLA STRUTTURA DEL PROGETTO E INSTALLAZIONE DEL APP LEGGERE IL FILE: ISTRUZIONI.md
     
