@@ -272,4 +272,4 @@ testWidgets('Mostra errori specifici per Email non valida e Password corta', (Wi
 ```
 ## Copertura
 I risultati del test di copertura sono riportati nella foto sottostante.
-![Risultati Copertura Test](immagini/coverage_preview.png)
+![Risultati Copertura Test](Immagini/coverage_preview.png)
