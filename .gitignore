@@ -1,3 +1,6 @@
 /.metadata/
 /.idea
 .idea/workspace.xml
+.vscode
+.DS_Store
+.idea
