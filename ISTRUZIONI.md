@@ -13,7 +13,7 @@ La cartella del progetto CAA-ing-software-a.a.-2025-2026 è strutturata nel segu
 
 ## installer
 
-+ apk da installare su dispositivo Android per eseguire l'app(versione 1.0)
++ link Google Drive per trovare l'apk da installare su dispositivo Android per eseguire l'app(versione 1.0)
 
 ## ESECUZIONE APP
 Di seguito le istruzioni per eseguire l'app chatbypics
