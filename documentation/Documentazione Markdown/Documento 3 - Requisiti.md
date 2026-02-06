@@ -62,6 +62,8 @@ La fase di elicitazione è stata condotta attraverso interviste dirette con il c
 * Mostri una sezione di accesso rapido contenente gli ultimi pittogrammi utilizzati (cronologia locale).  
 * Permetta la selezione sequenziale di più pittogrammi prima dell'invio.  
 * Per ogni pittogramma selezionato mostrare una schermata di suggerimenti contenente i 3 pittogrammi, (cliccabili) più recenti utilizzati in passato dopo quello selezionato ed aggiorni i suggerimenti del pittogramma precedente aggiungendo il pittogramma selezionato come suggerimento più recente (*esempio*: *Pittogramma Saluto ha come suggerimenti: 1\. Persona, 2\. Uomo, 3\. Donna. Dopo aver selezionato il pittogramma Saluto verranno mostrati i suggerimenti 1\. Persona, 2\. Uomo, 3\. Donna. Se si seleziona il pittogramma Amico, il sistema provvederà ad aggiornare i suggerimenti per Saluto in: 1\. Amico, 2.Persona, 3.Uomo) e mostrerà i suggerimenti per Amico, se non presenti non compariranno.*  
+
+![Diagramma macchina a stati](Immagini/StateMachine_ComposizioneMessaggio.png)
     
 - Pagina impostazioni e accessibilità: Il sistema deve fornire un'interfaccia di configurazione divisa in tre sezioni logiche:  
 1. **Accessibilità CAA:** Deve permettere la regolazione della dimensione della griglia dei pittogrammi e l'attivazione/disattivazione delle etichette testuali (label) sotto le immagini.  
